@@ -2,9 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SplashScreen from "expo-splash-screen";
 import { initDatabase } from "../lib/database";
 import { StatusBar } from "expo-status-bar";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useEffect } from "react";
-import { router } from "expo-router";
 import {
 	useFonts,
 	Inter_400Regular,
@@ -52,6 +51,7 @@ export default function RootLayout() {
 					options={{
 						title: "Add Debt",
 						presentation: "modal",
+						headerBackTitle: "Back",
 						headerStyle: { backgroundColor: "#1A1A1A" },
 						headerTintColor: "#FFFFFF",
 						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },

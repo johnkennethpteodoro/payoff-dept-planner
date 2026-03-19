@@ -1,8 +1,9 @@
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
-import { useState } from "react";
-import { router } from "expo-router";
-import Colors from "../constants/colors";
+import Colors, { Fonts } from "../constants/colors";
+import { Ionicons } from "@expo/vector-icons";
 import { addDebt } from "../lib/database";
+import { router } from "expo-router";
+import { useState } from "react";
 
 export default function AddDebt() {
 	const [name, setName] = useState("");
@@ -38,134 +39,186 @@ export default function AddDebt() {
 	};
 
 	return (
-		<ScrollView style={{ flex: 1, backgroundColor: Colors.background }}>
-			<View style={{ padding: 16, gap: 16 }}>
+		<ScrollView
+			style={{ flex: 1, backgroundColor: Colors.background }}
+			contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 60 }}
+			showsVerticalScrollIndicator={false}
+		>
+			{/* Header */}
+			<View
+				style={{
+					backgroundColor: Colors.card,
+					borderRadius: 20,
+					padding: 20,
+					alignItems: "center",
+					borderWidth: 1,
+					borderColor: Colors.border,
+					marginBottom: 8,
+				}}
+			>
+				<View
+					style={{
+						width: 56,
+						height: 56,
+						borderRadius: 16,
+						backgroundColor: Colors.primary,
+						alignItems: "center",
+						justifyContent: "center",
+						marginBottom: 12,
+					}}
+				>
+					<Ionicons name="add-circle" size={28} color="white" />
+				</View>
 				<Text
 					style={{
 						color: Colors.text,
-						fontSize: 24,
-						fontWeight: "bold",
-						marginBottom: 8,
+						fontSize: 20,
+						fontFamily: Fonts.bold,
 					}}
 				>
 					Add New Debt
 				</Text>
-
-				{/* Debt Name */}
-				<View>
-					<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-						DEBT NAME
-					</Text>
-					<TextInput
-						value={name}
-						onChangeText={setName}
-						placeholder="e.g. Credit Card, Car Loan"
-						placeholderTextColor={Colors.textLight}
-						style={{
-							backgroundColor: Colors.card,
-							padding: 14,
-							borderRadius: 10,
-							color: Colors.text,
-							borderWidth: 1,
-							borderColor: Colors.border,
-							fontSize: 16,
-						}}
-					/>
-				</View>
-
-				{/* Balance */}
-				<View>
-					<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-						CURRENT BALANCE (₱)
-					</Text>
-					<TextInput
-						value={balance}
-						onChangeText={setBalance}
-						placeholder="0.00"
-						placeholderTextColor={Colors.textLight}
-						keyboardType="decimal-pad"
-						style={{
-							backgroundColor: Colors.card,
-							padding: 14,
-							borderRadius: 10,
-							color: Colors.text,
-							borderWidth: 1,
-							borderColor: Colors.border,
-							fontSize: 16,
-						}}
-					/>
-				</View>
-
-				{/* Interest Rate */}
-				<View>
-					<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-						INTEREST RATE (%)
-					</Text>
-					<TextInput
-						value={interest}
-						onChangeText={setInterest}
-						placeholder="0.00"
-						placeholderTextColor={Colors.textLight}
-						keyboardType="decimal-pad"
-						style={{
-							backgroundColor: Colors.card,
-							padding: 14,
-							borderRadius: 10,
-							color: Colors.text,
-							borderWidth: 1,
-							borderColor: Colors.border,
-							fontSize: 16,
-						}}
-					/>
-				</View>
-
-				{/* Minimum Payment */}
-				<View>
-					<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-						MIN. MONTHLY PAYMENT (₱)
-					</Text>
-					<TextInput
-						value={minPayment}
-						onChangeText={setMinPayment}
-						placeholder="0.00"
-						placeholderTextColor={Colors.textLight}
-						keyboardType="decimal-pad"
-						style={{
-							backgroundColor: Colors.card,
-							padding: 14,
-							borderRadius: 10,
-							color: Colors.text,
-							borderWidth: 1,
-							borderColor: Colors.border,
-							fontSize: 16,
-						}}
-					/>
-				</View>
-
-				{/* Save Button */}
-				<TouchableOpacity
+				<Text
 					style={{
-						backgroundColor: Colors.primary,
-						padding: 16,
-						borderRadius: 12,
-						alignItems: "center",
-						marginTop: 8,
+						color: Colors.textSecondary,
+						fontSize: 13,
+						fontFamily: Fonts.regular,
+						marginTop: 4,
+						textAlign: "center",
 					}}
-					onPress={handleSave}
 				>
-					<Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
-						Save Debt
-					</Text>
-				</TouchableOpacity>
-
-				{/* Cancel */}
-				<TouchableOpacity
-					style={{ alignItems: "center", padding: 8 }}
-					onPress={() => router.back()}
-				>
-					<Text style={{ color: Colors.textSecondary }}>Cancel</Text>
-				</TouchableOpacity>
+					Fill in your debt details below
+				</Text>
 			</View>
+
+			{/* Debt Name */}
+			<View>
+				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
+					DEBT NAME
+				</Text>
+				<TextInput
+					value={name}
+					onChangeText={setName}
+					placeholder="e.g. Credit Card, Car Loan"
+					placeholderTextColor={Colors.textLight}
+					style={{
+						backgroundColor: Colors.card,
+						padding: 14,
+						borderRadius: 10,
+						color: Colors.text,
+						borderWidth: 1,
+						borderColor: Colors.border,
+						fontSize: 16,
+					}}
+				/>
+			</View>
+
+			{/* Balance */}
+			<View>
+				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
+					CURRENT BALANCE (₱)
+				</Text>
+				<TextInput
+					value={balance}
+					onChangeText={setBalance}
+					placeholder="0.00"
+					placeholderTextColor={Colors.textLight}
+					keyboardType="decimal-pad"
+					style={{
+						backgroundColor: Colors.card,
+						padding: 14,
+						borderRadius: 10,
+						color: Colors.text,
+						borderWidth: 1,
+						borderColor: Colors.border,
+						fontSize: 16,
+					}}
+				/>
+			</View>
+
+			{/* Interest Rate */}
+			<View>
+				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
+					INTEREST RATE (%)
+				</Text>
+				<TextInput
+					value={interest}
+					onChangeText={setInterest}
+					placeholder="0.00"
+					placeholderTextColor={Colors.textLight}
+					keyboardType="decimal-pad"
+					style={{
+						backgroundColor: Colors.card,
+						padding: 14,
+						borderRadius: 10,
+						color: Colors.text,
+						borderWidth: 1,
+						borderColor: Colors.border,
+						fontSize: 16,
+					}}
+				/>
+			</View>
+
+			{/* Minimum Payment */}
+			<View>
+				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
+					MIN. MONTHLY PAYMENT (₱)
+				</Text>
+				<TextInput
+					value={minPayment}
+					onChangeText={setMinPayment}
+					placeholder="0.00"
+					placeholderTextColor={Colors.textLight}
+					keyboardType="decimal-pad"
+					style={{
+						backgroundColor: Colors.card,
+						padding: 14,
+						borderRadius: 10,
+						color: Colors.text,
+						borderWidth: 1,
+						borderColor: Colors.border,
+						fontSize: 16,
+					}}
+				/>
+			</View>
+
+			{/* Save Button */}
+			<TouchableOpacity
+				style={{
+					backgroundColor: Colors.primary,
+					padding: 18,
+					borderRadius: 16,
+					alignItems: "center",
+					marginTop: 8,
+				}}
+				onPress={handleSave}
+			>
+				<Text
+					style={{
+						color: "white",
+						fontSize: 16,
+						fontFamily: Fonts.semiBold,
+					}}
+				>
+					Save Debt
+				</Text>
+			</TouchableOpacity>
+
+			{/* Cancel */}
+			<TouchableOpacity
+				style={{ alignItems: "center", padding: 8 }}
+				onPress={() => router.back()}
+			>
+				<Text
+					style={{
+						color: Colors.textSecondary,
+						fontSize: 15,
+						fontFamily: Fonts.regular,
+					}}
+				>
+					Cancel
+				</Text>
+			</TouchableOpacity>
 		</ScrollView>
 	);
 }

@@ -1,17 +1,24 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
 import Colors, { Fonts } from "../../constants/colors";
 import { getAllDebts, Debt } from "../../lib/database";
+import { router, useFocusEffect } from "expo-router";
+import { getSettings } from "../../lib/storage";
+import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useState } from "react";
 
 export default function Dashboard() {
 	const [debts, setDebts] = useState<Debt[]>([]);
+	const [userName, setUserName] = useState("");
+	const [currencySymbol, setCurrencySymbol] = useState("₱");
 
 	useFocusEffect(
 		useCallback(() => {
 			const data = getAllDebts();
 			setDebts(data);
+			getSettings().then((s) => {
+				setUserName(s.userName);
+				setCurrencySymbol(s.currencySymbol);
+			});
 		}, []),
 	);
 
@@ -23,7 +30,7 @@ export default function Dashboard() {
 		<ScrollView
 			style={{ flex: 1, backgroundColor: Colors.background }}
 			showsVerticalScrollIndicator={false}
-			contentContainerStyle={{ paddingBottom: 40 }}
+			contentContainerStyle={{ paddingBottom: 60 }}
 		>
 			{/* Hero Card */}
 			<View
@@ -34,12 +41,67 @@ export default function Dashboard() {
 					borderRadius: 24,
 				}}
 			>
+				{/* Top Row */}
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "space-between",
+						alignItems: "flex-start",
+						marginBottom: 16,
+					}}
+				>
+					<View>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.85)",
+								fontSize: 14,
+								fontFamily: Fonts.medium,
+							}}
+						>
+							{userName ? `Hi, ${userName}! 👋` : "Welcome! 👋"}
+						</Text>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.5)",
+								fontSize: 12,
+								fontFamily: Fonts.regular,
+								marginTop: 2,
+							}}
+						>
+							{new Date().toLocaleDateString("en-PH", {
+								weekday: "long",
+								month: "long",
+								day: "numeric",
+							})}
+						</Text>
+					</View>
+					<View
+						style={{
+							backgroundColor: "rgba(255,255,255,0.2)",
+							paddingHorizontal: 12,
+							paddingVertical: 6,
+							borderRadius: 20,
+						}}
+					>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 12,
+								fontFamily: Fonts.semiBold,
+							}}
+						>
+							{debts.length} {debts.length === 1 ? "debt" : "debts"}
+						</Text>
+					</View>
+				</View>
+
+				{/* Total Debt */}
 				<Text
 					style={{
-						color: "rgba(255,255,255,0.8)",
-						fontSize: 13,
+						color: "rgba(255,255,255,0.65)",
+						fontSize: 12,
 						fontFamily: Fonts.medium,
-						letterSpacing: 1.2,
+						letterSpacing: 1.5,
 						textTransform: "uppercase",
 					}}
 				>
@@ -48,129 +110,110 @@ export default function Dashboard() {
 				<Text
 					style={{
 						color: "white",
-						fontSize: 42,
+						fontSize: 44,
 						fontFamily: Fonts.bold,
-						marginTop: 6,
+						marginTop: 4,
 						letterSpacing: -1,
 					}}
 				>
-					₱{totalDebt.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+					{currencySymbol}
+					{totalDebt.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
 				</Text>
-				<View
-					style={{
-						flexDirection: "row",
-						alignItems: "center",
-						marginTop: 12,
-						gap: 6,
-					}}
-				>
-					<View
-						style={{
-							width: 6,
-							height: 6,
-							borderRadius: 3,
-							backgroundColor: "rgba(255,255,255,0.6)",
-						}}
-					/>
-					<Text
-						style={{
-							color: "rgba(255,255,255,0.7)",
-							fontSize: 13,
-							fontFamily: Fonts.regular,
-						}}
-					>
-						{debts.length} {debts.length === 1 ? "debt" : "debts"} tracked
-					</Text>
-				</View>
-			</View>
 
-			{/* Stats Row */}
-			<View style={{ flexDirection: "row", marginHorizontal: 16, gap: 12 }}>
+				{/* Divider */}
 				<View
 					style={{
-						flex: 1,
-						padding: 18,
-						backgroundColor: Colors.card,
-						borderRadius: 16,
-						borderWidth: 1,
-						borderColor: Colors.border,
+						height: 1,
+						backgroundColor: "rgba(255,255,255,0.2)",
+						marginVertical: 16,
 					}}
-				>
-					<Text
-						style={{
-							color: Colors.textSecondary,
-							fontSize: 11,
-							fontFamily: Fonts.medium,
-							letterSpacing: 0.8,
-							textTransform: "uppercase",
-						}}
-					>
-						Monthly
-					</Text>
-					<Text
-						style={{
-							color: Colors.text,
-							fontSize: 22,
-							fontFamily: Fonts.bold,
-							marginTop: 6,
-						}}
-					>
-						₱{totalMinPayment.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
-					</Text>
-				</View>
-				<View
-					style={{
-						flex: 1,
-						padding: 18,
-						backgroundColor: Colors.card,
-						borderRadius: 16,
-						borderWidth: 1,
-						borderColor: Colors.border,
-					}}
-				>
-					<Text
-						style={{
-							color: Colors.textSecondary,
-							fontSize: 11,
-							fontFamily: Fonts.medium,
-							letterSpacing: 0.8,
-							textTransform: "uppercase",
-						}}
-					>
-						Debt Free
-					</Text>
-					<Text
-						style={{
-							color: Colors.text,
-							fontSize: 22,
-							fontFamily: Fonts.bold,
-							marginTop: 6,
-						}}
-					>
-						{monthsToFreedom > 0 ? `${monthsToFreedom} mo.` : "--"}
-					</Text>
+				/>
+
+				{/* Bottom Stats */}
+				<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+					<View>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 1,
+								textTransform: "uppercase",
+							}}
+						>
+							Monthly
+						</Text>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 18,
+								fontFamily: Fonts.bold,
+								marginTop: 2,
+							}}
+						>
+							{currencySymbol}
+							{totalMinPayment.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
+						</Text>
+					</View>
+					<View style={{ alignItems: "flex-end" }}>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 1,
+								textTransform: "uppercase",
+							}}
+						>
+							Debt Free In
+						</Text>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 18,
+								fontFamily: Fonts.bold,
+								marginTop: 2,
+							}}
+						>
+							{monthsToFreedom > 0 ? `${monthsToFreedom} mo.` : "--"}
+						</Text>
+					</View>
 				</View>
 			</View>
 
 			{/* Add Button */}
 			<TouchableOpacity
 				style={{
-					margin: 16,
+					marginHorizontal: 16,
+					marginBottom: 16,
 					padding: 18,
-					backgroundColor: Colors.primary,
+					backgroundColor: Colors.card,
 					borderRadius: 16,
 					flexDirection: "row",
 					alignItems: "center",
 					justifyContent: "center",
 					gap: 8,
+					borderWidth: 1,
+					borderColor: Colors.border,
 				}}
 				onPress={() => router.push("/add-debt")}
 			>
-				<Ionicons name="add-circle-outline" size={22} color="white" />
+				<View
+					style={{
+						width: 28,
+						height: 28,
+						borderRadius: 8,
+						backgroundColor: Colors.primary,
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					<Ionicons name="add" size={18} color="white" />
+				</View>
 				<Text
 					style={{
-						color: "white",
-						fontSize: 16,
+						color: Colors.text,
+						fontSize: 15,
 						fontFamily: Fonts.semiBold,
 					}}
 				>
@@ -179,26 +222,36 @@ export default function Dashboard() {
 			</TouchableOpacity>
 
 			{/* Debt List */}
-			<View style={{ marginHorizontal: 16, gap: 12 }}>
+			<View style={{ marginHorizontal: 16, gap: 10 }}>
 				{debts.length === 0 ? (
-					<View style={{ alignItems: "center", marginTop: 32, padding: 24 }}>
+					<View
+						style={{
+							alignItems: "center",
+							paddingVertical: 48,
+							paddingHorizontal: 24,
+							backgroundColor: Colors.card,
+							borderRadius: 20,
+							borderWidth: 1,
+							borderColor: Colors.border,
+						}}
+					>
 						<View
 							style={{
-								width: 80,
-								height: 80,
-								borderRadius: 40,
-								backgroundColor: Colors.card,
+								width: 72,
+								height: 72,
+								borderRadius: 36,
+								backgroundColor: Colors.card2,
 								alignItems: "center",
 								justifyContent: "center",
 								marginBottom: 16,
 							}}
 						>
-							<Ionicons name="wallet-outline" size={40} color={Colors.textLight} />
+							<Ionicons name="wallet-outline" size={36} color={Colors.textLight} />
 						</View>
 						<Text
 							style={{
 								color: Colors.text,
-								fontSize: 18,
+								fontSize: 17,
 								fontFamily: Fonts.semiBold,
 								textAlign: "center",
 							}}
@@ -225,14 +278,16 @@ export default function Dashboard() {
 								color: Colors.textSecondary,
 								fontSize: 11,
 								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
+								letterSpacing: 1,
 								textTransform: "uppercase",
+								marginBottom: 4,
 							}}
 						>
 							Your Debts
 						</Text>
+
 						{debts.map((debt) => (
-							<View
+							<TouchableOpacity
 								key={debt.id}
 								style={{
 									backgroundColor: Colors.card,
@@ -240,55 +295,67 @@ export default function Dashboard() {
 									padding: 18,
 									borderWidth: 1,
 									borderColor: Colors.border,
+									flexDirection: "row",
+									alignItems: "center",
+									gap: 14,
 								}}
+								onPress={() => router.push("/debts")}
 							>
 								<View
 									style={{
-										flexDirection: "row",
-										justifyContent: "space-between",
-										alignItems: "flex-start",
+										width: 44,
+										height: 44,
+										borderRadius: 14,
+										backgroundColor: Colors.primary + "20",
+										alignItems: "center",
+										justifyContent: "center",
 									}}
 								>
-									<View style={{ flex: 1 }}>
-										<Text
-											style={{
-												color: Colors.text,
-												fontSize: 16,
-												fontFamily: Fonts.semiBold,
-											}}
-										>
-											{debt.name}
-										</Text>
-										<Text
-											style={{
-												color: Colors.textSecondary,
-												fontSize: 13,
-												fontFamily: Fonts.regular,
-												marginTop: 4,
-											}}
-										>
-											{debt.interest_rate}% • ₱{debt.min_payment}/mo min
-										</Text>
-									</View>
+									<Ionicons
+										name="card-outline"
+										size={22}
+										color={Colors.primary}
+									/>
+								</View>
+								<View style={{ flex: 1 }}>
 									<Text
 										style={{
-											color: Colors.primary,
-											fontSize: 18,
-											fontFamily: Fonts.bold,
+											color: Colors.text,
+											fontSize: 15,
+											fontFamily: Fonts.semiBold,
 										}}
 									>
-										₱
-										{debt.balance.toLocaleString("en-PH", {
-											minimumFractionDigits: 2,
-										})}
+										{debt.name}
+									</Text>
+									<Text
+										style={{
+											color: Colors.textSecondary,
+											fontSize: 12,
+											fontFamily: Fonts.regular,
+											marginTop: 3,
+										}}
+									>
+										{debt.interest_rate}% interest • {currencySymbol}
+										{debt.min_payment}/mo min
 									</Text>
 								</View>
-							</View>
+								<Text
+									style={{
+										color: Colors.primary,
+										fontSize: 16,
+										fontFamily: Fonts.bold,
+									}}
+								>
+									{currencySymbol}
+									{debt.balance.toLocaleString("en-PH", {
+										minimumFractionDigits: 2,
+									})}
+								</Text>
+							</TouchableOpacity>
 						))}
 					</>
 				)}
 			</View>
-			<View style={{ height: 32 }} />
 		</ScrollView>
 	);
 }

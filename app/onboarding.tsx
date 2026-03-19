@@ -1,8 +1,17 @@
-import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
+import {
+	View,
+	Text,
+	TouchableOpacity,
+	SafeAreaView,
+	TextInput,
+	KeyboardAvoidingView,
+	Platform,
+} from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "../constants/colors";
+import Colors, { Fonts } from "../constants/colors";
 import { useState } from "react";
+import { saveSettings, defaultSettings } from "../lib/storage";
 
 const slides = [
 	{
@@ -29,20 +38,145 @@ const slides = [
 
 export default function Onboarding() {
 	const [currentSlide, setCurrentSlide] = useState(0);
+	const [name, setName] = useState("");
+	const [showNameScreen, setShowNameScreen] = useState(false);
 
 	const handleNext = () => {
 		if (currentSlide < slides.length - 1) {
 			setCurrentSlide(currentSlide + 1);
 		} else {
-			router.replace("/(tabs)");
+			setShowNameScreen(true);
 		}
 	};
 
 	const handleSkip = () => {
+		setShowNameScreen(true);
+	};
+
+	const handleGetStarted = async () => {
+		await saveSettings({
+			...defaultSettings,
+			userName: name.trim(),
+		});
 		router.replace("/(tabs)");
 	};
 
 	const slide = slides[currentSlide];
+
+	if (showNameScreen) {
+		return (
+			<KeyboardAvoidingView
+				style={{ flex: 1, backgroundColor: Colors.background }}
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+			>
+				<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ flex: 1, padding: 24, justifyContent: "center" }}>
+						{/* Icon */}
+						<View
+							style={{
+								width: 100,
+								height: 100,
+								borderRadius: 28,
+								backgroundColor: Colors.primary,
+								alignItems: "center",
+								justifyContent: "center",
+								marginBottom: 32,
+								alignSelf: "center",
+							}}
+						>
+							<Ionicons name="person-outline" size={48} color="white" />
+						</View>
+
+						{/* Text */}
+						<Text
+							style={{
+								color: Colors.text,
+								fontSize: 28,
+								fontFamily: Fonts.bold,
+								textAlign: "center",
+							}}
+						>
+							What's your name?
+						</Text>
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 15,
+								fontFamily: Fonts.regular,
+								textAlign: "center",
+								marginTop: 10,
+								lineHeight: 24,
+							}}
+						>
+							We'll use it to personalize{"\n"}your experience
+						</Text>
+
+						{/* Input */}
+						<TextInput
+							value={name}
+							onChangeText={setName}
+							placeholder="Enter your name"
+							placeholderTextColor={Colors.textLight}
+							autoFocus
+							style={{
+								backgroundColor: Colors.card,
+								padding: 18,
+								borderRadius: 16,
+								color: Colors.text,
+								borderWidth: 1,
+								borderColor: name ? Colors.primary : Colors.border,
+								fontSize: 18,
+								fontFamily: Fonts.medium,
+								textAlign: "center",
+								marginTop: 32,
+							}}
+						/>
+
+						{/* Get Started Button */}
+						<TouchableOpacity
+							style={{
+								backgroundColor: Colors.primary,
+								padding: 18,
+								borderRadius: 16,
+								alignItems: "center",
+								marginTop: 16,
+								opacity: 1,
+							}}
+							onPress={handleGetStarted}
+						>
+							<Text
+								style={{
+									color: "white",
+									fontSize: 17,
+									fontFamily: Fonts.bold,
+								}}
+							>
+								{name.trim()
+									? `Let's Go, ${name.trim()}! 🚀`
+									: "Let's Get Started! 🚀"}
+							</Text>
+						</TouchableOpacity>
+
+						{/* Skip */}
+						<TouchableOpacity
+							style={{ alignItems: "center", padding: 16, marginTop: 4 }}
+							onPress={handleGetStarted}
+						>
+							<Text
+								style={{
+									color: Colors.textSecondary,
+									fontSize: 14,
+									fontFamily: Fonts.regular,
+								}}
+							>
+								Skip for now
+							</Text>
+						</TouchableOpacity>
+					</View>
+				</SafeAreaView>
+			</KeyboardAvoidingView>
+		);
+	}
 
 	return (
 		<SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -52,7 +186,15 @@ export default function Onboarding() {
 					onPress={handleSkip}
 					style={{ alignSelf: "flex-end", padding: 8 }}
 				>
-					<Text style={{ color: Colors.textSecondary, fontSize: 15 }}>Skip</Text>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 15,
+							fontFamily: Fonts.medium,
+						}}
+					>
+						Skip
+					</Text>
 				</TouchableOpacity>
 
 				{/* Icon */}
@@ -61,7 +203,7 @@ export default function Onboarding() {
 						style={{
 							width: 140,
 							height: 140,
-							borderRadius: 70,
+							borderRadius: 40,
 							backgroundColor: Colors.primary,
 							alignItems: "center",
 							justifyContent: "center",
@@ -76,7 +218,7 @@ export default function Onboarding() {
 							style={{
 								color: Colors.text,
 								fontSize: 28,
-								fontWeight: "bold",
+								fontFamily: Fonts.bold,
 								textAlign: "center",
 							}}
 						>
@@ -86,6 +228,7 @@ export default function Onboarding() {
 							style={{
 								color: Colors.textSecondary,
 								fontSize: 16,
+								fontFamily: Fonts.regular,
 								textAlign: "center",
 								lineHeight: 24,
 								paddingHorizontal: 16,
@@ -118,12 +261,18 @@ export default function Onboarding() {
 					style={{
 						backgroundColor: Colors.primary,
 						padding: 18,
-						borderRadius: 14,
+						borderRadius: 16,
 						alignItems: "center",
 					}}
 				>
-					<Text style={{ color: "white", fontSize: 17, fontWeight: "700" }}>
-						{currentSlide === slides.length - 1 ? "Let's Get Started!" : "Next"}
+					<Text
+						style={{
+							color: "white",
+							fontSize: 17,
+							fontFamily: Fonts.bold,
+						}}
+					>
+						{currentSlide === slides.length - 1 ? "Continue" : "Next"}
 					</Text>
 				</TouchableOpacity>
 			</View>

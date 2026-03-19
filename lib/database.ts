@@ -48,3 +48,7 @@ export function updateDebt(debt: Debt): void {
 		debt.id!,
 	]);
 }
+
+export function clearAllDebts(): void {
+	db.execSync(`DELETE FROM debts;`);
+}

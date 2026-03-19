@@ -1,10 +1,28 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Colors, { Fonts } from "../../constants/colors";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, Image } from "react-native";
 import { router } from "expo-router";
 
 export default function TabLayout() {
+	const HeaderLeft = () => (
+		<Image
+			source={require("../../assets/icon.png")}
+			style={{
+				width: 32,
+				height: 32,
+				borderRadius: 8,
+				marginLeft: 16,
+			}}
+		/>
+	);
+
+	const HeaderRight = () => (
+		<TouchableOpacity onPress={() => router.push("/settings")} style={{ marginRight: 16 }}>
+			<Ionicons name="settings-outline" size={24} color={Colors.text} />
+		</TouchableOpacity>
+	);
+
 	return (
 		<Tabs
 			screenOptions={{
@@ -28,22 +46,16 @@ export default function TabLayout() {
 				headerTitleStyle: {
 					fontFamily: Fonts.semiBold,
 				},
+				headerLeft: () => <HeaderLeft />,
+				headerRight: () => <HeaderRight />,
 			}}
 		>
 			<Tabs.Screen
 				name="index"
 				options={{
-					title: "Dashboard",
+					title: "Payoff",
 					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="home-outline" size={size} color={color} />
-					),
-					headerRight: () => (
-						<TouchableOpacity
-							onPress={() => router.push("/settings")}
-							style={{ marginRight: 16 }}
-						>
-							<Ionicons name="settings-outline" size={24} color={Colors.text} />
-						</TouchableOpacity>
 					),
 				}}
 			/>
