@@ -67,6 +67,26 @@ export default function RootLayout() {
 						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
 					}}
 				/>
+				<Stack.Screen
+					name="privacy-policy"
+					options={{
+						title: "Privacy Policy",
+						headerBackTitle: "Back",
+						headerStyle: { backgroundColor: "#1A1A1A" },
+						headerTintColor: "#FFFFFF",
+						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
+					}}
+				/>
+				<Stack.Screen
+					name="terms"
+					options={{
+						title: "Terms of Use",
+						headerBackTitle: "Back",
+						headerStyle: { backgroundColor: "#1A1A1A" },
+						headerTintColor: "#FFFFFF",
+						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
+					}}
+				/>
 			</Stack>
 		</>
 	);

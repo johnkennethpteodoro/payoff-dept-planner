@@ -333,7 +333,7 @@ export default function Dashboard() {
 									}}
 								>
 									{debt.interest_rate}% • {currencySymbol}
-									{debt.min_payment} month
+									{debt.min_payment}/mo
 								</Text>
 							</View>
 

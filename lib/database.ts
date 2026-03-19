@@ -30,6 +30,17 @@ export function initDatabase() {
 	} catch (e) {
 		// Column already exists
 	}
+
+	// Initialize payment history table
+	db.execSync(`
+    CREATE TABLE IF NOT EXISTS payment_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      debt_id INTEGER NOT NULL,
+      debt_name TEXT NOT NULL,
+      amount REAL NOT NULL,
+      paid_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 }
 
 export function addDebt(debt: Debt): void {
@@ -67,4 +78,39 @@ export function updateDebt(debt: Debt): void {
 
 export function clearAllDebts(): void {
 	db.execSync(`DELETE FROM debts;`);
+}
+
+export function logPayment(debtId: number, amount: number): void {
+	db.runSync(`UPDATE debts SET balance = MAX(0, balance - ?) WHERE id = ?`, [amount, debtId]);
+}
+
+export function getPaymentHistory(): any[] {
+	return db.getAllSync(`SELECT * FROM payment_history ORDER BY paid_at DESC`);
+}
+
+export function initPaymentHistory(): void {
+	db.execSync(`
+    CREATE TABLE IF NOT EXISTS payment_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      debt_id INTEGER NOT NULL,
+      debt_name TEXT NOT NULL,
+      amount REAL NOT NULL,
+      paid_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+
+export function logPaymentWithHistory(debtId: number, debtName: string, amount: number): void {
+	db.runSync(`UPDATE debts SET balance = MAX(0, balance - ?) WHERE id = ?`, [amount, debtId]);
+	db.runSync(`INSERT INTO payment_history (debt_id, debt_name, amount) VALUES (?, ?, ?)`, [
+		debtId,
+		debtName,
+		amount,
+	]);
+
+	// Auto mark as complete if balance reaches 0
+	const debt = db.getFirstSync<Debt>(`SELECT * FROM debts WHERE id = ?`, [debtId]);
+	if (debt && debt.balance <= 0) {
+		db.runSync(`UPDATE debts SET is_paid = 1 WHERE id = ?`, [debtId]);
+	}
 }

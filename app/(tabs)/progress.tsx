@@ -208,16 +208,18 @@ export default function Progress() {
 					>
 						{debts.length}
 					</Text>
-					<Text
-						style={{
-							color: Colors.textSecondary,
-							fontSize: 11,
-							fontFamily: Fonts.regular,
-							marginTop: 2,
-						}}
-					>
-						debts remaining
-					</Text>
+					{debts.length > 0 && (
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.regular,
+								marginTop: 2,
+							}}
+						>
+							debts remaining
+						</Text>
+					)}
 				</View>
 
 				<View
@@ -251,16 +253,18 @@ export default function Progress() {
 					>
 						{paidDebts.length}
 					</Text>
-					<Text
-						style={{
-							color: Colors.textSecondary,
-							fontSize: 11,
-							fontFamily: Fonts.regular,
-							marginTop: 2,
-						}}
-					>
-						debts done 🎉
-					</Text>
+					{paidDebts.length > 0 && (
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.regular,
+								marginTop: 2,
+							}}
+						>
+							debts done 🎉
+						</Text>
+					)}
 				</View>
 			</View>
 

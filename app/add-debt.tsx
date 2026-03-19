@@ -19,10 +19,25 @@ const DEBT_CATEGORIES = [
 export default function AddDebt() {
 	const [name, setName] = useState("");
 	const [balance, setBalance] = useState("");
-	const [interest, setInterest] = useState("");
+	const [balanceDisplay, setBalanceDisplay] = useState("");
 	const [minPayment, setMinPayment] = useState("");
+	const [minPaymentDisplay, setMinPaymentDisplay] = useState("");
+	const [interest, setInterest] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("");
 	const [showCustom, setShowCustom] = useState(false);
+
+	const formatNumber = (value: string): string => {
+		const cleaned = value.replace(/,/g, "");
+		if (isNaN(Number(cleaned))) return value;
+		if (cleaned === "") return "";
+		const parts = cleaned.split(".");
+		parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		return parts.join(".");
+	};
+
+	const unformatNumber = (value: string): string => {
+		return value.replace(/,/g, "");
+	};
 
 	const handleCategorySelect = (label: string) => {
 		setSelectedCategory(label);
@@ -83,13 +98,7 @@ export default function AddDebt() {
 					What type of debt?
 				</Text>
 
-				<View
-					style={{
-						flexDirection: "row",
-						flexWrap: "wrap",
-						gap: 8,
-					}}
-				>
+				<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
 					{DEBT_CATEGORIES.map((cat) => (
 						<TouchableOpacity
 							key={cat.label}
@@ -139,7 +148,7 @@ export default function AddDebt() {
 				</View>
 			</View>
 
-			{/* Custom Name — shows when Other is selected */}
+			{/* Custom Name */}
 			{showCustom && (
 				<View>
 					<Text
@@ -174,15 +183,10 @@ export default function AddDebt() {
 				</View>
 			)}
 
-			{/* Step 2 — Enter Details — only show after category is selected */}
+			{/* Step 2 — Debt Details */}
 			{selectedCategory !== "" && (
 				<>
-					<View
-						style={{
-							height: 1,
-							backgroundColor: Colors.border,
-						}}
-					/>
+					<View style={{ height: 1, backgroundColor: Colors.border }} />
 
 					<Text
 						style={{
@@ -223,7 +227,7 @@ export default function AddDebt() {
 						</View>
 					)}
 
-					{/* Balance */}
+					{/* Balance — with auto format */}
 					<View>
 						<Text
 							style={{
@@ -238,8 +242,12 @@ export default function AddDebt() {
 							Current Balance
 						</Text>
 						<TextInput
-							value={balance}
-							onChangeText={setBalance}
+							value={balanceDisplay}
+							onChangeText={(text) => {
+								const raw = unformatNumber(text);
+								setBalance(raw);
+								setBalanceDisplay(formatNumber(raw));
+							}}
 							placeholder="0.00"
 							placeholderTextColor={Colors.textLight}
 							keyboardType="decimal-pad"
@@ -289,7 +297,7 @@ export default function AddDebt() {
 						/>
 					</View>
 
-					{/* Min Payment */}
+					{/* Min Payment — with auto format */}
 					<View>
 						<Text
 							style={{
@@ -304,8 +312,12 @@ export default function AddDebt() {
 							Min. Monthly Payment
 						</Text>
 						<TextInput
-							value={minPayment}
-							onChangeText={setMinPayment}
+							value={minPaymentDisplay}
+							onChangeText={(text) => {
+								const raw = unformatNumber(text);
+								setMinPayment(raw);
+								setMinPaymentDisplay(formatNumber(raw));
+							}}
 							placeholder="0.00"
 							placeholderTextColor={Colors.textLight}
 							keyboardType="decimal-pad"
