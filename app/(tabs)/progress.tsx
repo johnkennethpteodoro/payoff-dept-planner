@@ -1,17 +1,19 @@
+import { getAllDebts, getPaidDebts, Debt } from "../../lib/database";
+import Colors, { Fonts } from "../../constants/colors";
 import { View, Text, ScrollView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import Colors from "../../constants/colors";
-import { getAllDebts, Debt } from "../../lib/database";
 
 export default function Progress() {
 	const [debts, setDebts] = useState<Debt[]>([]);
+	const [paidDebts, setPaidDebts] = useState<Debt[]>([]);
 
 	useFocusEffect(
 		useCallback(() => {
-			const data = getAllDebts();
-			setDebts(data);
+			setDebts(getAllDebts());
+			setPaidDebts(getPaidDebts());
 		}, []),
 	);
 
@@ -20,161 +22,336 @@ export default function Progress() {
 	const monthsToFreedom = totalMinPayment > 0 ? Math.ceil(totalDebt / totalMinPayment) : 0;
 
 	const milestones = [
-		{ label: "Added first debt", icon: "flag-outline", done: debts.length > 0 },
-		{ label: "Created payoff plan", icon: "analytics-outline", done: debts.length > 0 },
-		{ label: "First debt paid off", icon: "checkmark-circle-outline", done: false },
-		{ label: "Halfway there!", icon: "trending-up-outline", done: false },
-		{ label: "Debt free! 🎉", icon: "trophy-outline", done: false },
+		{
+			label: "Added first debt",
+			icon: "flag-outline",
+			done: debts.length > 0 || paidDebts.length > 0,
+		},
+		{
+			label: "Created payoff plan",
+			icon: "analytics-outline",
+			done: debts.length > 0 || paidDebts.length > 0,
+		},
+		{
+			label: "First debt completed",
+			icon: "checkmark-circle-outline",
+			done: paidDebts.length >= 1,
+		},
+		{
+			label: "Halfway there!",
+			icon: "trending-up-outline",
+			done:
+				paidDebts.length > 0 &&
+				paidDebts.length >= Math.ceil((debts.length + paidDebts.length) / 2),
+		},
+		{
+			label: "Debt free!",
+			icon: "trophy-outline",
+			done: debts.length === 0 && paidDebts.length > 0,
+		},
 	];
 
+	const completedMilestones = milestones.filter((m) => m.done).length;
+	const progressPercent = (completedMilestones / milestones.length) * 100;
+
 	return (
-		<ScrollView style={{ flex: 1, backgroundColor: Colors.background }}>
-			<View style={{ padding: 16, gap: 16 }}>
-				{/* Header Card */}
+		<ScrollView
+			style={{ flex: 1, backgroundColor: Colors.background }}
+			showsVerticalScrollIndicator={false}
+			contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 60 }}
+		>
+			{/* Hero Card */}
+			<LinearGradient
+				colors={["#E53935", "#8B0000"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 0 }}
+				style={{ borderRadius: 24, padding: 24 }}
+			>
+				{/* Top Row */}
 				<View
 					style={{
-						backgroundColor: Colors.primary,
-						borderRadius: 16,
-						padding: 24,
-						alignItems: "center",
+						flexDirection: "row",
+						justifyContent: "space-between",
+						alignItems: "flex-start",
+						marginBottom: 20,
 					}}
 				>
-					<Ionicons name="trophy" size={48} color="white" />
+					<View>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 12,
+								fontFamily: Fonts.medium,
+								letterSpacing: 1.2,
+								textTransform: "uppercase",
+							}}
+						>
+							Your Journey
+						</Text>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 26,
+								fontFamily: Fonts.bold,
+								marginTop: 4,
+							}}
+						>
+							{debts.length > 0
+								? `${monthsToFreedom} months`
+								: debts.length === 0 && paidDebts.length > 0
+									? "🎉 Done!"
+									: "--"}
+						</Text>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 13,
+								fontFamily: Fonts.regular,
+								marginTop: 2,
+							}}
+						>
+							{debts.length === 0 && paidDebts.length > 0
+								? "All debts completed!"
+								: "to debt freedom"}
+						</Text>
+					</View>
+
+					<View
+						style={{
+							width: 64,
+							height: 64,
+							borderRadius: 20,
+							backgroundColor: "rgba(255,255,255,0.2)",
+							alignItems: "center",
+							justifyContent: "center",
+						}}
+					>
+						<Ionicons name="trophy" size={32} color="white" />
+					</View>
+				</View>
+
+				{/* Progress Bar */}
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "space-between",
+						marginBottom: 8,
+					}}
+				>
 					<Text
-						style={{ color: "white", fontSize: 22, fontWeight: "bold", marginTop: 12 }}
+						style={{
+							color: "rgba(255,255,255,0.65)",
+							fontSize: 12,
+							fontFamily: Fonts.medium,
+						}}
 					>
-						Your Journey
+						Milestone progress
 					</Text>
-					<Text style={{ color: "white", opacity: 0.8, fontSize: 14, marginTop: 4 }}>
-						{debts.length > 0
-							? `${monthsToFreedom} months to debt freedom!`
-							: "Start by adding your debts!"}
+					<Text
+						style={{
+							color: "white",
+							fontSize: 12,
+							fontFamily: Fonts.bold,
+						}}
+					>
+						{completedMilestones}/{milestones.length}
+					</Text>
+				</View>
+				<View
+					style={{
+						height: 6,
+						backgroundColor: "rgba(255,255,255,0.25)",
+						borderRadius: 3,
+					}}
+				>
+					<View
+						style={{
+							height: 6,
+							backgroundColor: "white",
+							borderRadius: 3,
+							width: `${progressPercent}%`,
+						}}
+					/>
+				</View>
+			</LinearGradient>
+
+			{/* Stats Row */}
+			<View style={{ flexDirection: "row", gap: 10 }}>
+				<View
+					style={{
+						flex: 1,
+						backgroundColor: Colors.card,
+						borderRadius: 16,
+						padding: 18,
+						borderWidth: 1,
+						borderColor: Colors.border,
+					}}
+				>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.medium,
+							letterSpacing: 0.8,
+							textTransform: "uppercase",
+						}}
+					>
+						Active
+					</Text>
+					<Text
+						style={{
+							color: Colors.primary,
+							fontSize: 36,
+							fontFamily: Fonts.bold,
+							marginTop: 6,
+						}}
+					>
+						{debts.length}
+					</Text>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.regular,
+							marginTop: 2,
+						}}
+					>
+						debts remaining
 					</Text>
 				</View>
 
-				{/* Stats */}
-				<View style={{ flexDirection: "row", gap: 12 }}>
-					<View
+				<View
+					style={{
+						flex: 1,
+						backgroundColor: Colors.card,
+						borderRadius: 16,
+						padding: 18,
+						borderWidth: 1,
+						borderColor: paidDebts.length > 0 ? Colors.success + "40" : Colors.border,
+					}}
+				>
+					<Text
 						style={{
-							flex: 1,
-							backgroundColor: Colors.card,
-							borderRadius: 12,
-							padding: 16,
-							alignItems: "center",
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.medium,
+							letterSpacing: 0.8,
+							textTransform: "uppercase",
 						}}
 					>
-						<Text style={{ color: Colors.textSecondary, fontSize: 11 }}>
-							TOTAL DEBTS
-						</Text>
-						<Text
-							style={{
-								color: Colors.primary,
-								fontSize: 32,
-								fontWeight: "bold",
-								marginTop: 4,
-							}}
-						>
-							{debts.length}
-						</Text>
-					</View>
-					<View
+						Completed
+					</Text>
+					<Text
 						style={{
-							flex: 1,
-							backgroundColor: Colors.card,
-							borderRadius: 12,
-							padding: 16,
-							alignItems: "center",
+							color: Colors.success,
+							fontSize: 36,
+							fontFamily: Fonts.bold,
+							marginTop: 6,
 						}}
 					>
-						<Text style={{ color: Colors.textSecondary, fontSize: 11 }}>
-							DEBTS PAID
-						</Text>
-						<Text
-							style={{
-								color: Colors.primary,
-								fontSize: 32,
-								fontWeight: "bold",
-								marginTop: 4,
-							}}
-						>
-							0
-						</Text>
-					</View>
-					<View
+						{paidDebts.length}
+					</Text>
+					<Text
 						style={{
-							flex: 1,
-							backgroundColor: Colors.card,
-							borderRadius: 12,
-							padding: 16,
-							alignItems: "center",
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.regular,
+							marginTop: 2,
 						}}
 					>
-						<Text style={{ color: Colors.textSecondary, fontSize: 11 }}>
-							MONTHS LEFT
-						</Text>
-						<Text
-							style={{
-								color: Colors.primary,
-								fontSize: 32,
-								fontWeight: "bold",
-								marginTop: 4,
-							}}
-						>
-							{monthsToFreedom > 0 ? monthsToFreedom : "--"}
-						</Text>
-					</View>
+						debts done 🎉
+					</Text>
 				</View>
+			</View>
 
-				{/* Milestones */}
-				<Text style={{ color: Colors.textSecondary, fontSize: 13 }}>MILESTONES</Text>
-				{milestones.map((milestone, index) => (
+			{/* Milestones */}
+			<View
+				style={{
+					flexDirection: "row",
+					justifyContent: "space-between",
+					alignItems: "center",
+				}}
+			>
+				<Text
+					style={{
+						color: Colors.textSecondary,
+						fontSize: 11,
+						fontFamily: Fonts.medium,
+						letterSpacing: 0.8,
+						textTransform: "uppercase",
+					}}
+				>
+					Milestones
+				</Text>
+				<Text
+					style={{
+						color: Colors.textSecondary,
+						fontSize: 12,
+						fontFamily: Fonts.regular,
+					}}
+				>
+					{Math.round(progressPercent)}% complete
+				</Text>
+			</View>
+
+			{milestones.map((milestone, index) => (
+				<View
+					key={index}
+					style={{
+						flexDirection: "row",
+						alignItems: "center",
+						gap: 14,
+						backgroundColor: Colors.card,
+						borderRadius: 16,
+						padding: 16,
+						borderWidth: 1,
+						borderColor: milestone.done ? Colors.primary : Colors.border,
+					}}
+				>
 					<View
-						key={index}
 						style={{
-							flexDirection: "row",
+							width: 42,
+							height: 42,
+							borderRadius: 13,
+							backgroundColor: milestone.done ? Colors.primary : Colors.card2,
 							alignItems: "center",
-							gap: 12,
-							backgroundColor: Colors.card,
-							borderRadius: 12,
-							padding: 16,
-							borderWidth: 1,
-							borderColor: milestone.done ? Colors.primary : Colors.border,
+							justifyContent: "center",
 						}}
 					>
-						<View
-							style={{
-								width: 40,
-								height: 40,
-								borderRadius: 20,
-								backgroundColor: milestone.done ? Colors.primary : Colors.card2,
-								alignItems: "center",
-								justifyContent: "center",
-							}}
-						>
-							<Ionicons
-								name={milestone.icon as any}
-								size={20}
-								color={milestone.done ? "white" : Colors.textLight}
-							/>
-						</View>
+						{milestone.done ? (
+							<Ionicons name="checkmark" size={20} color="white" />
+						) : (
+							<Text
+								style={{
+									color: Colors.textLight,
+									fontSize: 15,
+									fontFamily: Fonts.bold,
+								}}
+							>
+								{index + 1}
+							</Text>
+						)}
+					</View>
+
+					<View style={{ flex: 1 }}>
 						<Text
 							style={{
 								color: milestone.done ? Colors.text : Colors.textSecondary,
 								fontSize: 15,
-								fontWeight: milestone.done ? "600" : "400",
-								flex: 1,
+								fontFamily: milestone.done ? Fonts.semiBold : Fonts.regular,
 							}}
 						>
 							{milestone.label}
 						</Text>
-						{milestone.done && (
-							<Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
-						)}
 					</View>
-				))}
 
-				<View style={{ height: 32 }} />
-			</View>
+					<Ionicons
+						name={milestone.icon as any}
+						size={20}
+						color={milestone.done ? Colors.primary : Colors.textLight}
+					/>
+				</View>
+			))}
 		</ScrollView>
 	);
 }

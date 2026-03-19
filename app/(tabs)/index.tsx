@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import Colors, { Fonts } from "../../constants/colors";
 import { getAllDebts, Debt } from "../../lib/database";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { getSettings } from "../../lib/storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,42 +31,43 @@ export default function Dashboard() {
 		<ScrollView
 			style={{ flex: 1, backgroundColor: Colors.background }}
 			showsVerticalScrollIndicator={false}
-			contentContainerStyle={{ paddingBottom: 60 }}
+			contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 60 }}
 		>
 			{/* Hero Card */}
-			<View
+			<LinearGradient
+				colors={["#E53935", "#8B0000"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 0 }}
 				style={{
-					margin: 16,
-					padding: 28,
-					backgroundColor: Colors.primary,
 					borderRadius: 24,
+					padding: 24,
 				}}
 			>
-				{/* Top Row */}
+				{/* Top Row — Greeting + Badge */}
 				<View
 					style={{
 						flexDirection: "row",
 						justifyContent: "space-between",
 						alignItems: "flex-start",
-						marginBottom: 16,
+						marginBottom: 20,
 					}}
 				>
 					<View>
 						<Text
 							style={{
-								color: "rgba(255,255,255,0.85)",
-								fontSize: 14,
-								fontFamily: Fonts.medium,
+								color: "rgba(255,255,255,0.95)",
+								fontSize: 16,
+								fontFamily: Fonts.semiBold,
 							}}
 						>
 							{userName ? `Hi, ${userName}! 👋` : "Welcome! 👋"}
 						</Text>
 						<Text
 							style={{
-								color: "rgba(255,255,255,0.5)",
+								color: "rgba(255,255,255,0.55)",
 								fontSize: 12,
 								fontFamily: Fonts.regular,
-								marginTop: 2,
+								marginTop: 3,
 							}}
 						>
 							{new Date().toLocaleDateString("en-PH", {
@@ -146,7 +148,7 @@ export default function Dashboard() {
 						<Text
 							style={{
 								color: "white",
-								fontSize: 18,
+								fontSize: 20,
 								fontFamily: Fonts.bold,
 								marginTop: 2,
 							}}
@@ -170,7 +172,7 @@ export default function Dashboard() {
 						<Text
 							style={{
 								color: "white",
-								fontSize: 18,
+								fontSize: 20,
 								fontFamily: Fonts.bold,
 								marginTop: 2,
 							}}
@@ -179,14 +181,12 @@ export default function Dashboard() {
 						</Text>
 					</View>
 				</View>
-			</View>
+			</LinearGradient>
 
 			{/* Add Button */}
 			<TouchableOpacity
 				style={{
-					marginHorizontal: 16,
-					marginBottom: 16,
-					padding: 18,
+					padding: 16,
 					backgroundColor: Colors.card,
 					borderRadius: 16,
 					flexDirection: "row",
@@ -200,15 +200,15 @@ export default function Dashboard() {
 			>
 				<View
 					style={{
-						width: 28,
-						height: 28,
+						width: 26,
+						height: 26,
 						borderRadius: 8,
 						backgroundColor: Colors.primary,
 						alignItems: "center",
 						justifyContent: "center",
 					}}
 				>
-					<Ionicons name="add" size={18} color="white" />
+					<Ionicons name="add" size={16} color="white" />
 				</View>
 				<Text
 					style={{
@@ -222,140 +222,140 @@ export default function Dashboard() {
 			</TouchableOpacity>
 
 			{/* Debt List */}
-			<View style={{ marginHorizontal: 16, gap: 10 }}>
-				{debts.length === 0 ? (
+			{debts.length === 0 ? (
+				<View
+					style={{
+						alignItems: "center",
+						paddingVertical: 48,
+						paddingHorizontal: 24,
+						backgroundColor: Colors.card,
+						borderRadius: 20,
+						borderWidth: 1,
+						borderColor: Colors.border,
+					}}
+				>
 					<View
 						style={{
+							width: 72,
+							height: 72,
+							borderRadius: 36,
+							backgroundColor: Colors.card2,
 							alignItems: "center",
-							paddingVertical: 48,
-							paddingHorizontal: 24,
-							backgroundColor: Colors.card,
-							borderRadius: 20,
-							borderWidth: 1,
-							borderColor: Colors.border,
+							justifyContent: "center",
+							marginBottom: 16,
 						}}
 					>
-						<View
-							style={{
-								width: 72,
-								height: 72,
-								borderRadius: 36,
-								backgroundColor: Colors.card2,
-								alignItems: "center",
-								justifyContent: "center",
-								marginBottom: 16,
-							}}
-						>
-							<Ionicons name="wallet-outline" size={36} color={Colors.textLight} />
-						</View>
-						<Text
-							style={{
-								color: Colors.text,
-								fontSize: 17,
-								fontFamily: Fonts.semiBold,
-								textAlign: "center",
-							}}
-						>
-							No debts yet
-						</Text>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 14,
-								fontFamily: Fonts.regular,
-								textAlign: "center",
-								marginTop: 8,
-								lineHeight: 22,
-							}}
-						>
-							Add your first debt to start{"\n"}your payoff journey!
-						</Text>
+						<Ionicons name="wallet-outline" size={36} color={Colors.textLight} />
 					</View>
-				) : (
-					<>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 1,
-								textTransform: "uppercase",
-								marginBottom: 4,
-							}}
-						>
-							Your Debts
-						</Text>
+					<Text
+						style={{
+							color: Colors.text,
+							fontSize: 17,
+							fontFamily: Fonts.semiBold,
+							textAlign: "center",
+						}}
+					>
+						No debts yet
+					</Text>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 14,
+							fontFamily: Fonts.regular,
+							textAlign: "center",
+							marginTop: 8,
+							lineHeight: 22,
+						}}
+					>
+						Add your first debt to start{"\n"}your payoff journey!
+					</Text>
+				</View>
+			) : (
+				<>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.medium,
+							letterSpacing: 1,
+							textTransform: "uppercase",
+						}}
+					>
+						Your Debts
+					</Text>
 
-						{debts.map((debt) => (
-							<TouchableOpacity
-								key={debt.id}
+					{debts.map((debt) => (
+						<TouchableOpacity
+							key={debt.id}
+							style={{
+								backgroundColor: Colors.card,
+								borderRadius: 16,
+								padding: 16,
+								borderWidth: 1,
+								borderColor: Colors.border,
+								flexDirection: "row",
+								alignItems: "center",
+								gap: 12,
+							}}
+							onPress={() => router.push("/debts")}
+						>
+							{/* Icon */}
+							<View
 								style={{
-									backgroundColor: Colors.card,
-									borderRadius: 16,
-									padding: 18,
-									borderWidth: 1,
-									borderColor: Colors.border,
-									flexDirection: "row",
+									width: 42,
+									height: 42,
+									borderRadius: 13,
+									backgroundColor: Colors.primary + "20",
 									alignItems: "center",
-									gap: 14,
+									justifyContent: "center",
 								}}
-								onPress={() => router.push("/debts")}
 							>
-								<View
+								<Ionicons name="card-outline" size={20} color={Colors.primary} />
+							</View>
+
+							{/* Info */}
+							<View style={{ flex: 1 }}>
+								<Text
 									style={{
-										width: 44,
-										height: 44,
-										borderRadius: 14,
-										backgroundColor: Colors.primary + "20",
-										alignItems: "center",
-										justifyContent: "center",
+										color: Colors.text,
+										fontSize: 15,
+										fontFamily: Fonts.semiBold,
 									}}
 								>
-									<Ionicons
-										name="card-outline"
-										size={22}
-										color={Colors.primary}
-									/>
-								</View>
-								<View style={{ flex: 1 }}>
-									<Text
-										style={{
-											color: Colors.text,
-											fontSize: 15,
-											fontFamily: Fonts.semiBold,
-										}}
-									>
-										{debt.name}
-									</Text>
-									<Text
-										style={{
-											color: Colors.textSecondary,
-											fontSize: 12,
-											fontFamily: Fonts.regular,
-											marginTop: 3,
-										}}
-									>
-										{debt.interest_rate}% interest • {currencySymbol}
-										{debt.min_payment}/mo min
-									</Text>
-								</View>
+									{debt.name}
+								</Text>
+								<Text
+									style={{
+										color: Colors.textSecondary,
+										fontSize: 12,
+										fontFamily: Fonts.regular,
+										marginTop: 2,
+									}}
+								>
+									{debt.interest_rate}% • {currencySymbol}
+									{debt.min_payment} month
+								</Text>
+							</View>
+
+							{/* Amount + Arrow */}
+							<View style={{ alignItems: "flex-end", gap: 2 }}>
 								<Text
 									style={{
 										color: Colors.primary,
-										fontSize: 16,
+										fontSize: 15,
 										fontFamily: Fonts.bold,
 									}}
 								>
 									{currencySymbol}
 									{debt.balance.toLocaleString("en-PH", {
-										minimumFractionDigits: 2,
+										minimumFractionDigits: 0,
 									})}
 								</Text>
-							</TouchableOpacity>
-						))}
-					</>
-				)}
-			</View>
+							</View>
+						</TouchableOpacity>
+					))}
+				</>
+			)}
 		</ScrollView>
 	);
 }

@@ -1,3 +1,9 @@
+import Colors, { Fonts } from "../../constants/colors";
+import { getAllDebts } from "../../lib/database";
+import { getSettings } from "../../lib/storage";
+import { Ionicons } from "@expo/vector-icons";
+import { sendMessage } from "../../lib/ai";
+import { useState, useRef } from "react";
 import {
 	View,
 	Text,
@@ -7,10 +13,6 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 } from "react-native";
-import { useState, useRef } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import Colors, { Fonts } from "../../constants/colors";
-import { getAllDebts } from "../../lib/database";
 
 interface Message {
 	role: "user" | "assistant";
@@ -22,14 +24,14 @@ export default function Coach() {
 		{
 			role: "assistant",
 			content:
-				"Hi! I'm your AI Debt Coach 💪 I can help you create a personalized payoff plan, answer questions about your debts, and keep you motivated. What would you like to know?",
+				"Hi! I'm your AI Debt Coach 💪 I can help you create a personalized payoff plan, answer questions about your debts, and keep you motivated.\n\nI work both online and offline! What would you like to know?",
 		},
 	]);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
 	const scrollRef = useRef<ScrollView>(null);
 
-	const sendMessage = async () => {
+	const handleSend = async () => {
 		if (!input.trim() || loading) return;
 
 		const userMessage = input.trim();
@@ -39,48 +41,22 @@ export default function Coach() {
 
 		try {
 			const debts = getAllDebts();
-			const debtSummary =
-				debts.length > 0
-					? debts
-							.map(
-								(d) =>
-									`${d.name}: ₱${d.balance} at ${d.interest_rate}% interest, ₱${d.min_payment}/mo minimum`,
-							)
-							.join("\n")
-					: "No debts added yet.";
+			const settings = await getSettings();
 
-			const response = await fetch("https://api.anthropic.com/v1/messages", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"x-api-key": process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY || "",
-					"anthropic-version": "2023-06-01",
-				},
-				body: JSON.stringify({
-					model: "claude-haiku-4-5-20251001",
-					max_tokens: 1024,
-					system: `You are a helpful and encouraging AI debt coach for a Filipino user. 
-You help them pay off their debts using proven strategies like Snowball and Avalanche methods.
-Be concise, friendly, and motivating. Use ₱ for Philippine Peso.
-Here are the user's current debts:
-${debtSummary}`,
-					messages: [
-						...messages.map((m) => ({ role: m.role, content: m.content })),
-						{ role: "user", content: userMessage },
-					],
-				}),
-			});
+			const { response, isOnline: online } = await sendMessage(
+				userMessage,
+				messages.map((m) => ({ role: m.role, content: m.content })),
+				debts,
+				settings,
+			);
 
-			const data = await response.json();
-			const reply = data.content[0].text;
-			setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+			setMessages((prev) => [...prev, { role: "assistant", content: response }]);
 		} catch (error) {
 			setMessages((prev) => [
 				...prev,
 				{
 					role: "assistant",
-					content:
-						"Sorry, I need an internet connection to respond. Please check your connection and try again!",
+					content: "Sorry, something went wrong. Please try again!",
 				},
 			]);
 		} finally {
@@ -95,7 +71,7 @@ ${debtSummary}`,
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
 			keyboardVerticalOffset={90}
 		>
-			{/* Header Info */}
+			{/* Header */}
 			<View
 				style={{
 					margin: 16,
@@ -140,25 +116,7 @@ ${debtSummary}`,
 							marginTop: 2,
 						}}
 					>
-						Powered by Claude AI
-					</Text>
-				</View>
-				<View
-					style={{
-						backgroundColor: Colors.success + "20",
-						paddingHorizontal: 10,
-						paddingVertical: 4,
-						borderRadius: 20,
-					}}
-				>
-					<Text
-						style={{
-							color: Colors.success,
-							fontSize: 11,
-							fontFamily: Fonts.medium,
-						}}
-					>
-						Online
+						Works online & offline
 					</Text>
 				</View>
 			</View>
@@ -259,9 +217,10 @@ ${debtSummary}`,
 						borderColor: Colors.border,
 					}}
 					multiline
+					onSubmitEditing={handleSend}
 				/>
 				<TouchableOpacity
-					onPress={sendMessage}
+					onPress={handleSend}
 					disabled={loading}
 					style={{
 						backgroundColor: loading ? Colors.textLight : Colors.primary,

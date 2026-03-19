@@ -1,9 +1,11 @@
-import { View, Text, ScrollView } from "react-native";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import Colors, { Fonts } from "../../constants/colors";
 import { getAllDebts, Debt } from "../../lib/database";
+import { LinearGradient } from "expo-linear-gradient";
+import { getSettings } from "../../lib/storage";
+import { useCallback, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 
 interface PayoffDebt extends Debt {
 	monthsToPayoff: number;
@@ -15,7 +17,6 @@ function calculatePayoff(debt: Debt): PayoffDebt {
 	let balance = debt.balance;
 	let months = 0;
 	let totalInterest = 0;
-
 	while (balance > 0 && months < 600) {
 		const interest = balance * monthlyRate;
 		totalInterest += interest;
@@ -23,246 +24,370 @@ function calculatePayoff(debt: Debt): PayoffDebt {
 		if (balance < 0) balance = 0;
 		months++;
 	}
-
 	return { ...debt, monthsToPayoff: months, totalInterestPaid: totalInterest };
+}
+
+function getDebtFreeDate(months: number): string {
+	if (months === 0) return "--";
+	const date = new Date();
+	date.setMonth(date.getMonth() + months);
+	return date.toLocaleDateString("en-PH", { month: "long", year: "numeric" });
 }
 
 export default function Plan() {
 	const [debts, setDebts] = useState<PayoffDebt[]>([]);
+	const [strategy, setStrategy] = useState<"snowball" | "avalanche">("snowball");
+	const [currencySymbol, setCurrencySymbol] = useState("₱");
 
 	useFocusEffect(
 		useCallback(() => {
 			const data = getAllDebts();
-			const calculated = data.map(calculatePayoff).sort((a, b) => a.balance - b.balance);
-			setDebts(calculated);
-		}, []),
+			getSettings().then((s) => {
+				setCurrencySymbol(s.currencySymbol);
+				applyStrategy(data, strategy);
+			});
+		}, [strategy]),
 	);
 
-	const totalDebt = debts.reduce((sum, d) => sum + d.balance, 0);
+	const applyStrategy = (data: Debt[], currentStrategy: string) => {
+		const calculated = data.map(calculatePayoff);
+		if (currentStrategy === "snowball") {
+			calculated.sort((a, b) => a.balance - b.balance);
+		} else {
+			calculated.sort((a, b) => b.interest_rate - a.interest_rate);
+		}
+		setDebts(calculated);
+	};
+
+	const handleStrategyChange = (newStrategy: "snowball" | "avalanche") => {
+		setStrategy(newStrategy);
+		const data = getAllDebts();
+		applyStrategy(data, newStrategy);
+	};
+
 	const totalInterest = debts.reduce((sum, d) => sum + d.totalInterestPaid, 0);
+	const totalMonthlyPayment = debts.reduce((sum, d) => sum + d.min_payment, 0);
 	const maxMonths = debts.length > 0 ? Math.max(...debts.map((d) => d.monthsToPayoff)) : 0;
 
 	return (
 		<ScrollView
 			style={{ flex: 1, backgroundColor: Colors.background }}
 			showsVerticalScrollIndicator={false}
-			contentContainerStyle={{ paddingBottom: 40 }}
+			contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 60 }}
 		>
-			<View style={{ padding: 16, gap: 16 }}>
-				{/* Strategy Card */}
+			{/* Hero Summary Card */}
+			<LinearGradient
+				colors={["#E53935", "#8B0000"]}
+				start={{ x: 0, y: 0 }}
+				end={{ x: 1, y: 0 }}
+				style={{
+					borderRadius: 24,
+					padding: 24,
+				}}
+			>
+				{/* Top — Debt Free Date */}
+				<Text
+					style={{
+						color: "rgba(255,255,255,0.65)",
+						fontSize: 12,
+						fontFamily: Fonts.medium,
+						letterSpacing: 1.2,
+						textTransform: "uppercase",
+					}}
+				>
+					Debt Free By
+				</Text>
+				<Text
+					style={{
+						color: "white",
+						fontSize: 28,
+						fontFamily: Fonts.bold,
+						marginTop: 4,
+					}}
+				>
+					{maxMonths > 0 ? getDebtFreeDate(maxMonths) : "--"}
+				</Text>
+
 				<View
 					style={{
+						height: 1,
+						backgroundColor: "rgba(255,255,255,0.2)",
+						marginVertical: 16,
+					}}
+				/>
+
+				{/* Bottom Row */}
+				<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+					<View>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								textTransform: "uppercase",
+								letterSpacing: 1,
+							}}
+						>
+							Monthly
+						</Text>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 20,
+								fontFamily: Fonts.bold,
+								marginTop: 4,
+							}}
+						>
+							{currencySymbol}
+							{totalMonthlyPayment.toLocaleString("en-PH", {
+								minimumFractionDigits: 0,
+							})}
+						</Text>
+					</View>
+					<View style={{ alignItems: "center" }}>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								textTransform: "uppercase",
+								letterSpacing: 1,
+							}}
+						>
+							Duration
+						</Text>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 20,
+								fontFamily: Fonts.bold,
+								marginTop: 4,
+							}}
+						>
+							{maxMonths > 0 ? `${maxMonths} mo.` : "--"}
+						</Text>
+					</View>
+					<View style={{ alignItems: "flex-end" }}>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.65)",
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								textTransform: "uppercase",
+								letterSpacing: 1,
+							}}
+						>
+							Interest
+						</Text>
+						<Text
+							style={{
+								color: "rgba(255,255,255,0.9)",
+								fontSize: 20,
+								fontFamily: Fonts.bold,
+								marginTop: 4,
+							}}
+						>
+							{currencySymbol}
+							{totalInterest.toFixed(0)}
+						</Text>
+					</View>
+				</View>
+			</LinearGradient>
+
+			{/* Strategy Toggle */}
+			<View
+				style={{
+					flexDirection: "row",
+					backgroundColor: Colors.card,
+					borderRadius: 16,
+					padding: 4,
+					borderWidth: 1,
+					borderColor: Colors.border,
+				}}
+			>
+				<TouchableOpacity
+					onPress={() => handleStrategyChange("snowball")}
+					style={{
+						flex: 1,
+						flexDirection: "row",
+						alignItems: "center",
+						justifyContent: "center",
+						gap: 6,
+						padding: 12,
+						borderRadius: 12,
+						backgroundColor: strategy === "snowball" ? Colors.primary : "transparent",
+					}}
+				>
+					<Ionicons
+						name="snow-outline"
+						size={16}
+						color={strategy === "snowball" ? "white" : Colors.textSecondary}
+					/>
+					<Text
+						style={{
+							color: strategy === "snowball" ? "white" : Colors.textSecondary,
+							fontSize: 13,
+							fontFamily: Fonts.semiBold,
+						}}
+					>
+						Snowball
+					</Text>
+				</TouchableOpacity>
+
+				<TouchableOpacity
+					onPress={() => handleStrategyChange("avalanche")}
+					style={{
+						flex: 1,
+						flexDirection: "row",
+						alignItems: "center",
+						justifyContent: "center",
+						gap: 6,
+						padding: 12,
+						borderRadius: 12,
+						backgroundColor: strategy === "avalanche" ? Colors.primary : "transparent",
+					}}
+				>
+					<Ionicons
+						name="trending-down-outline"
+						size={16}
+						color={strategy === "avalanche" ? "white" : Colors.textSecondary}
+					/>
+					<Text
+						style={{
+							color: strategy === "avalanche" ? "white" : Colors.textSecondary,
+							fontSize: 13,
+							fontFamily: Fonts.semiBold,
+						}}
+					>
+						Avalanche
+					</Text>
+				</TouchableOpacity>
+			</View>
+
+			{/* Strategy Tip */}
+			<Text
+				style={{
+					color: Colors.textSecondary,
+					fontSize: 13,
+					fontFamily: Fonts.regular,
+					textAlign: "center",
+					lineHeight: 20,
+				}}
+			>
+				{strategy === "snowball"
+					? "❄️ Paying smallest debts first builds momentum"
+					: "🏔️ Paying highest interest first saves more money"}
+			</Text>
+
+			{/* Payoff Order */}
+			{debts.length === 0 ? (
+				<View
+					style={{
+						alignItems: "center",
+						paddingVertical: 48,
 						backgroundColor: Colors.card,
 						borderRadius: 20,
-						padding: 20,
 						borderWidth: 1,
 						borderColor: Colors.border,
 					}}
 				>
 					<View
 						style={{
-							flexDirection: "row",
+							width: 72,
+							height: 72,
+							borderRadius: 36,
+							backgroundColor: Colors.card2,
 							alignItems: "center",
-							gap: 10,
-							marginBottom: 10,
+							justifyContent: "center",
+							marginBottom: 16,
 						}}
 					>
-						<View
-							style={{
-								width: 40,
-								height: 40,
-								borderRadius: 12,
-								backgroundColor: Colors.primary,
-								alignItems: "center",
-								justifyContent: "center",
-							}}
-						>
-							<Ionicons name="snow-outline" size={20} color="white" />
-						</View>
-						<Text
-							style={{
-								color: Colors.text,
-								fontSize: 17,
-								fontFamily: Fonts.bold,
-							}}
-						>
-							Snowball Strategy
-						</Text>
+						<Ionicons name="analytics-outline" size={36} color={Colors.textLight} />
 					</View>
+					<Text
+						style={{
+							color: Colors.text,
+							fontSize: 17,
+							fontFamily: Fonts.semiBold,
+						}}
+					>
+						No plan yet
+					</Text>
 					<Text
 						style={{
 							color: Colors.textSecondary,
 							fontSize: 14,
 							fontFamily: Fonts.regular,
+							marginTop: 8,
+							textAlign: "center",
 							lineHeight: 22,
 						}}
 					>
-						Pay off smallest debts first to build momentum. Each paid debt frees up
-						money for the next one.
+						Add debts to see your{"\n"}personalized payoff plan!
 					</Text>
 				</View>
-
-				{/* Summary Stats */}
-				<View style={{ flexDirection: "row", gap: 12 }}>
-					<View
+			) : (
+				<>
+					<Text
 						style={{
-							flex: 1,
-							backgroundColor: Colors.card,
-							borderRadius: 16,
-							padding: 16,
-							borderWidth: 1,
-							borderColor: Colors.border,
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.medium,
+							letterSpacing: 0.8,
+							textTransform: "uppercase",
 						}}
 					>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-							}}
-						>
-							Debt Free In
-						</Text>
-						<Text
-							style={{
-								color: Colors.primary,
-								fontSize: 26,
-								fontFamily: Fonts.bold,
-								marginTop: 6,
-							}}
-						>
-							{maxMonths > 0 ? `${maxMonths} mo.` : "--"}
-						</Text>
-					</View>
-					<View
-						style={{
-							flex: 1,
-							backgroundColor: Colors.card,
-							borderRadius: 16,
-							padding: 16,
-							borderWidth: 1,
-							borderColor: Colors.border,
-						}}
-					>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-							}}
-						>
-							Total Interest
-						</Text>
-						<Text
-							style={{
-								color: Colors.text,
-								fontSize: 26,
-								fontFamily: Fonts.bold,
-								marginTop: 6,
-							}}
-						>
-							₱{totalInterest.toFixed(0)}
-						</Text>
-					</View>
-				</View>
+						Payoff Order
+					</Text>
 
-				{/* Payoff Order */}
-				{debts.length === 0 ? (
-					<View style={{ alignItems: "center", marginTop: 48 }}>
+					{debts.map((debt, index) => (
 						<View
+							key={debt.id}
 							style={{
-								width: 80,
-								height: 80,
-								borderRadius: 40,
 								backgroundColor: Colors.card,
-								alignItems: "center",
-								justifyContent: "center",
-								marginBottom: 16,
+								borderRadius: 16,
+								padding: 16,
+								borderWidth: 1,
+								borderColor: index === 0 ? Colors.primary : Colors.border,
 							}}
 						>
-							<Ionicons name="analytics-outline" size={40} color={Colors.textLight} />
-						</View>
-						<Text
-							style={{
-								color: Colors.text,
-								fontSize: 18,
-								fontFamily: Fonts.semiBold,
-								textAlign: "center",
-							}}
-						>
-							No plan yet
-						</Text>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 14,
-								fontFamily: Fonts.regular,
-								textAlign: "center",
-								marginTop: 8,
-								lineHeight: 22,
-							}}
-						>
-							Add debts to see your{"\n"}personalized payoff plan!
-						</Text>
-					</View>
-				) : (
-					<>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-							}}
-						>
-							Payoff Order
-						</Text>
-
-						{debts.map((debt, index) => (
-							<View
-								key={debt.id}
-								style={{
-									backgroundColor: Colors.card,
-									borderRadius: 16,
-									padding: 18,
-									borderWidth: 1,
-									borderColor: index === 0 ? Colors.primary : Colors.border,
-								}}
-							>
+							<View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+								{/* Number */}
 								<View
-									style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+									style={{
+										width: 36,
+										height: 36,
+										borderRadius: 10,
+										backgroundColor:
+											index === 0 ? Colors.primary : Colors.card2,
+										alignItems: "center",
+										justifyContent: "center",
+									}}
 								>
+									<Text
+										style={{
+											color: index === 0 ? "white" : Colors.textSecondary,
+											fontFamily: Fonts.bold,
+											fontSize: 15,
+										}}
+									>
+										{index + 1}
+									</Text>
+								</View>
+
+								{/* Name + Details */}
+								<View style={{ flex: 1 }}>
 									<View
 										style={{
-											width: 36,
-											height: 36,
-											borderRadius: 12,
-											backgroundColor:
-												index === 0 ? Colors.primary : Colors.card2,
+											flexDirection: "row",
+											justifyContent: "space-between",
 											alignItems: "center",
-											justifyContent: "center",
 										}}
 									>
 										<Text
 											style={{
-												color: "white",
-												fontFamily: Fonts.bold,
-												fontSize: 15,
-											}}
-										>
-											{index + 1}
-										</Text>
-									</View>
-									<View style={{ flex: 1 }}>
-										<Text
-											style={{
 												color: Colors.text,
-												fontSize: 16,
+												fontSize: 15,
 												fontFamily: Fonts.semiBold,
 											}}
 										>
@@ -270,65 +395,73 @@ export default function Plan() {
 										</Text>
 										<Text
 											style={{
-												color: Colors.textSecondary,
-												fontSize: 13,
-												fontFamily: Fonts.regular,
-												marginTop: 2,
-											}}
-										>
-											₱
-											{debt.balance.toLocaleString("en-PH", {
-												minimumFractionDigits: 2,
-											})}
-										</Text>
-									</View>
-									<View style={{ alignItems: "flex-end" }}>
-										<Text
-											style={{
-												color: Colors.primary,
-												fontSize: 16,
+												color: index === 0 ? Colors.primary : Colors.text,
+												fontSize: 15,
 												fontFamily: Fonts.bold,
 											}}
 										>
 											{debt.monthsToPayoff} mo.
+										</Text>
+									</View>
+
+									<View
+										style={{
+											flexDirection: "row",
+											justifyContent: "space-between",
+											marginTop: 4,
+										}}
+									>
+										<Text
+											style={{
+												color: Colors.textSecondary,
+												fontSize: 12,
+												fontFamily: Fonts.regular,
+											}}
+										>
+											{currencySymbol}
+											{debt.balance.toLocaleString("en-PH", {
+												minimumFractionDigits: 0,
+											})}{" "}
+											• {debt.interest_rate}%
 										</Text>
 										<Text
 											style={{
 												color: Colors.textSecondary,
 												fontSize: 12,
 												fontFamily: Fonts.regular,
-												marginTop: 2,
 											}}
 										>
-											₱{debt.totalInterestPaid.toFixed(0)} interest
+											{index === 0
+												? "🎯 Pay this first"
+												: getDebtFreeDate(debt.monthsToPayoff)}
 										</Text>
 									</View>
 								</View>
+							</View>
 
-								{/* Progress Bar */}
+							{/* Progress Bar */}
+							<View
+								style={{
+									height: 3,
+									backgroundColor: Colors.border,
+									borderRadius: 2,
+									marginTop: 12,
+								}}
+							>
 								<View
 									style={{
-										height: 4,
-										backgroundColor: Colors.border,
+										height: 3,
+										backgroundColor:
+											index === 0 ? Colors.primary : Colors.textLight,
 										borderRadius: 2,
-										marginTop: 14,
+										width: `${Math.min((debt.min_payment / debt.balance) * 100 * 10, 100)}%`,
 									}}
-								>
-									<View
-										style={{
-											height: 4,
-											backgroundColor:
-												index === 0 ? Colors.primary : Colors.textLight,
-											borderRadius: 2,
-											width: `${Math.min((debt.min_payment / debt.balance) * 100 * 10, 100)}%`,
-										}}
-									/>
-								</View>
+								/>
 							</View>
-						))}
-					</>
-				)}
-			</View>
+						</View>
+					))}
+				</>
+			)}
 		</ScrollView>
 	);
 }

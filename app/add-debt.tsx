@@ -5,11 +5,35 @@ import { addDebt } from "../lib/database";
 import { router } from "expo-router";
 import { useState } from "react";
 
+const DEBT_CATEGORIES = [
+	{ label: "Credit Card", icon: "card-outline" },
+	{ label: "Car Loan", icon: "car-outline" },
+	{ label: "Personal Loan", icon: "person-outline" },
+	{ label: "Student Loan", icon: "school-outline" },
+	{ label: "Mortgage", icon: "home-outline" },
+	{ label: "Medical Bill", icon: "medical-outline" },
+	{ label: "Business Loan", icon: "briefcase-outline" },
+	{ label: "Other", icon: "ellipsis-horizontal-outline" },
+];
+
 export default function AddDebt() {
 	const [name, setName] = useState("");
 	const [balance, setBalance] = useState("");
 	const [interest, setInterest] = useState("");
 	const [minPayment, setMinPayment] = useState("");
+	const [selectedCategory, setSelectedCategory] = useState("");
+	const [showCustom, setShowCustom] = useState(false);
+
+	const handleCategorySelect = (label: string) => {
+		setSelectedCategory(label);
+		if (label === "Other") {
+			setShowCustom(true);
+			setName("");
+		} else {
+			setShowCustom(false);
+			setName(label);
+		}
+	};
 
 	const handleSave = () => {
 		if (!name.trim() || !balance.trim() || !interest.trim() || !minPayment.trim()) {
@@ -33,7 +57,7 @@ export default function AddDebt() {
 			min_payment: minPaymentNum,
 		});
 
-		Alert.alert("Success!", "Debt added successfully!", [
+		Alert.alert("Success! 🎉", `"${name}" has been added!`, [
 			{ text: "OK", onPress: () => router.back() },
 		]);
 	};
@@ -44,181 +68,298 @@ export default function AddDebt() {
 			contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 60 }}
 			showsVerticalScrollIndicator={false}
 		>
-			{/* Header */}
-			<View
-				style={{
-					backgroundColor: Colors.card,
-					borderRadius: 20,
-					padding: 20,
-					alignItems: "center",
-					borderWidth: 1,
-					borderColor: Colors.border,
-					marginBottom: 8,
-				}}
-			>
-				<View
+			{/* Step 1 — Pick Category */}
+			<View>
+				<Text
 					style={{
-						width: 56,
-						height: 56,
-						borderRadius: 16,
-						backgroundColor: Colors.primary,
-						alignItems: "center",
-						justifyContent: "center",
+						color: Colors.textSecondary,
+						fontSize: 11,
+						fontFamily: Fonts.medium,
+						letterSpacing: 0.8,
+						textTransform: "uppercase",
 						marginBottom: 12,
 					}}
 				>
-					<Ionicons name="add-circle" size={28} color="white" />
+					What type of debt?
+				</Text>
+
+				<View
+					style={{
+						flexDirection: "row",
+						flexWrap: "wrap",
+						gap: 8,
+					}}
+				>
+					{DEBT_CATEGORIES.map((cat) => (
+						<TouchableOpacity
+							key={cat.label}
+							onPress={() => handleCategorySelect(cat.label)}
+							style={{
+								flexDirection: "row",
+								alignItems: "center",
+								gap: 6,
+								paddingHorizontal: 14,
+								paddingVertical: 10,
+								borderRadius: 12,
+								borderWidth: 1.5,
+								borderColor:
+									selectedCategory === cat.label ? Colors.primary : Colors.border,
+								backgroundColor:
+									selectedCategory === cat.label
+										? Colors.primary + "15"
+										: Colors.card,
+							}}
+						>
+							<Ionicons
+								name={cat.icon as any}
+								size={16}
+								color={
+									selectedCategory === cat.label
+										? Colors.primary
+										: Colors.textSecondary
+								}
+							/>
+							<Text
+								style={{
+									color:
+										selectedCategory === cat.label
+											? Colors.primary
+											: Colors.textSecondary,
+									fontSize: 13,
+									fontFamily:
+										selectedCategory === cat.label
+											? Fonts.semiBold
+											: Fonts.regular,
+								}}
+							>
+								{cat.label}
+							</Text>
+						</TouchableOpacity>
+					))}
 				</View>
-				<Text
-					style={{
-						color: Colors.text,
-						fontSize: 20,
-						fontFamily: Fonts.bold,
-					}}
-				>
-					Add New Debt
-				</Text>
-				<Text
-					style={{
-						color: Colors.textSecondary,
-						fontSize: 13,
-						fontFamily: Fonts.regular,
-						marginTop: 4,
-						textAlign: "center",
-					}}
-				>
-					Fill in your debt details below
-				</Text>
 			</View>
 
-			{/* Debt Name */}
-			<View>
-				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-					DEBT NAME
-				</Text>
-				<TextInput
-					value={name}
-					onChangeText={setName}
-					placeholder="e.g. Credit Card, Car Loan"
-					placeholderTextColor={Colors.textLight}
-					style={{
-						backgroundColor: Colors.card,
-						padding: 14,
-						borderRadius: 10,
-						color: Colors.text,
-						borderWidth: 1,
-						borderColor: Colors.border,
-						fontSize: 16,
-					}}
-				/>
-			</View>
+			{/* Custom Name — shows when Other is selected */}
+			{showCustom && (
+				<View>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.medium,
+							letterSpacing: 0.8,
+							textTransform: "uppercase",
+							marginBottom: 8,
+						}}
+					>
+						Custom Debt Name
+					</Text>
+					<TextInput
+						value={name}
+						onChangeText={setName}
+						placeholder="e.g. Sari-sari store loan"
+						placeholderTextColor={Colors.textLight}
+						autoFocus
+						style={{
+							backgroundColor: Colors.card,
+							padding: 16,
+							borderRadius: 14,
+							color: Colors.text,
+							borderWidth: 1,
+							borderColor: name ? Colors.primary : Colors.border,
+							fontSize: 16,
+							fontFamily: Fonts.regular,
+						}}
+					/>
+				</View>
+			)}
 
-			{/* Balance */}
-			<View>
-				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-					CURRENT BALANCE (₱)
-				</Text>
-				<TextInput
-					value={balance}
-					onChangeText={setBalance}
-					placeholder="0.00"
-					placeholderTextColor={Colors.textLight}
-					keyboardType="decimal-pad"
-					style={{
-						backgroundColor: Colors.card,
-						padding: 14,
-						borderRadius: 10,
-						color: Colors.text,
-						borderWidth: 1,
-						borderColor: Colors.border,
-						fontSize: 16,
-					}}
-				/>
-			</View>
+			{/* Step 2 — Enter Details — only show after category is selected */}
+			{selectedCategory !== "" && (
+				<>
+					<View
+						style={{
+							height: 1,
+							backgroundColor: Colors.border,
+						}}
+					/>
 
-			{/* Interest Rate */}
-			<View>
-				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-					INTEREST RATE (%)
-				</Text>
-				<TextInput
-					value={interest}
-					onChangeText={setInterest}
-					placeholder="0.00"
-					placeholderTextColor={Colors.textLight}
-					keyboardType="decimal-pad"
-					style={{
-						backgroundColor: Colors.card,
-						padding: 14,
-						borderRadius: 10,
-						color: Colors.text,
-						borderWidth: 1,
-						borderColor: Colors.border,
-						fontSize: 16,
-					}}
-				/>
-			</View>
+					<Text
+						style={{
+							color: Colors.textSecondary,
+							fontSize: 11,
+							fontFamily: Fonts.medium,
+							letterSpacing: 0.8,
+							textTransform: "uppercase",
+						}}
+					>
+						Debt Details
+					</Text>
 
-			{/* Minimum Payment */}
-			<View>
-				<Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8 }}>
-					MIN. MONTHLY PAYMENT (₱)
-				</Text>
-				<TextInput
-					value={minPayment}
-					onChangeText={setMinPayment}
-					placeholder="0.00"
-					placeholderTextColor={Colors.textLight}
-					keyboardType="decimal-pad"
-					style={{
-						backgroundColor: Colors.card,
-						padding: 14,
-						borderRadius: 10,
-						color: Colors.text,
-						borderWidth: 1,
-						borderColor: Colors.border,
-						fontSize: 16,
-					}}
-				/>
-			</View>
+					{/* Selected debt name display */}
+					{!showCustom && (
+						<View
+							style={{
+								flexDirection: "row",
+								alignItems: "center",
+								gap: 10,
+								padding: 14,
+								backgroundColor: Colors.primary + "15",
+								borderRadius: 12,
+								borderWidth: 1,
+								borderColor: Colors.primary + "40",
+							}}
+						>
+							<Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+							<Text
+								style={{
+									color: Colors.primary,
+									fontSize: 14,
+									fontFamily: Fonts.semiBold,
+								}}
+							>
+								{name}
+							</Text>
+						</View>
+					)}
 
-			{/* Save Button */}
-			<TouchableOpacity
-				style={{
-					backgroundColor: Colors.primary,
-					padding: 18,
-					borderRadius: 16,
-					alignItems: "center",
-					marginTop: 8,
-				}}
-				onPress={handleSave}
-			>
-				<Text
-					style={{
-						color: "white",
-						fontSize: 16,
-						fontFamily: Fonts.semiBold,
-					}}
-				>
-					Save Debt
-				</Text>
-			</TouchableOpacity>
+					{/* Balance */}
+					<View>
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 0.8,
+								textTransform: "uppercase",
+								marginBottom: 8,
+							}}
+						>
+							Current Balance
+						</Text>
+						<TextInput
+							value={balance}
+							onChangeText={setBalance}
+							placeholder="0.00"
+							placeholderTextColor={Colors.textLight}
+							keyboardType="decimal-pad"
+							style={{
+								backgroundColor: Colors.card,
+								padding: 16,
+								borderRadius: 14,
+								color: Colors.text,
+								borderWidth: 1,
+								borderColor: balance ? Colors.primary : Colors.border,
+								fontSize: 16,
+								fontFamily: Fonts.regular,
+							}}
+						/>
+					</View>
 
-			{/* Cancel */}
-			<TouchableOpacity
-				style={{ alignItems: "center", padding: 8 }}
-				onPress={() => router.back()}
-			>
-				<Text
-					style={{
-						color: Colors.textSecondary,
-						fontSize: 15,
-						fontFamily: Fonts.regular,
-					}}
-				>
-					Cancel
-				</Text>
-			</TouchableOpacity>
+					{/* Interest Rate */}
+					<View>
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 0.8,
+								textTransform: "uppercase",
+								marginBottom: 8,
+							}}
+						>
+							Interest Rate (%)
+						</Text>
+						<TextInput
+							value={interest}
+							onChangeText={setInterest}
+							placeholder="0.00"
+							placeholderTextColor={Colors.textLight}
+							keyboardType="decimal-pad"
+							style={{
+								backgroundColor: Colors.card,
+								padding: 16,
+								borderRadius: 14,
+								color: Colors.text,
+								borderWidth: 1,
+								borderColor: interest ? Colors.primary : Colors.border,
+								fontSize: 16,
+								fontFamily: Fonts.regular,
+							}}
+						/>
+					</View>
+
+					{/* Min Payment */}
+					<View>
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 0.8,
+								textTransform: "uppercase",
+								marginBottom: 8,
+							}}
+						>
+							Min. Monthly Payment
+						</Text>
+						<TextInput
+							value={minPayment}
+							onChangeText={setMinPayment}
+							placeholder="0.00"
+							placeholderTextColor={Colors.textLight}
+							keyboardType="decimal-pad"
+							style={{
+								backgroundColor: Colors.card,
+								padding: 16,
+								borderRadius: 14,
+								color: Colors.text,
+								borderWidth: 1,
+								borderColor: minPayment ? Colors.primary : Colors.border,
+								fontSize: 16,
+								fontFamily: Fonts.regular,
+							}}
+						/>
+					</View>
+
+					{/* Save Button */}
+					<TouchableOpacity
+						style={{
+							backgroundColor: Colors.primary,
+							padding: 18,
+							borderRadius: 16,
+							alignItems: "center",
+							marginTop: 8,
+						}}
+						onPress={handleSave}
+					>
+						<Text
+							style={{
+								color: "white",
+								fontSize: 16,
+								fontFamily: Fonts.semiBold,
+							}}
+						>
+							Save Debt
+						</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity
+						style={{ alignItems: "center", padding: 8 }}
+						onPress={() => router.back()}
+					>
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 15,
+								fontFamily: Fonts.regular,
+							}}
+						>
+							Cancel
+						</Text>
+					</TouchableOpacity>
+				</>
+			)}
 		</ScrollView>
 	);
 }
