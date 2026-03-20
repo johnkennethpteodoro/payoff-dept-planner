@@ -40,87 +40,88 @@ export default function Dashboard() {
 				end={{ x: 1, y: 0 }}
 				style={{
 					borderRadius: 24,
-					padding: 24,
 				}}
 			>
-				{/* Top Row — Greeting + Badge */}
-				<View
-					style={{
-						flexDirection: "row",
-						justifyContent: "space-between",
-						alignItems: "flex-start",
-						marginBottom: 20,
-					}}
-				>
-					<View>
-						<Text
-							style={{
-								color: "rgba(255,255,255,0.95)",
-								fontSize: 16,
-								fontFamily: Fonts.semiBold,
-							}}
-						>
-							{userName ? `Hi, ${userName}! 👋` : "Welcome! 👋"}
-						</Text>
-						<Text
-							style={{
-								color: "rgba(255,255,255,0.55)",
-								fontSize: 12,
-								fontFamily: Fonts.regular,
-								marginTop: 3,
-							}}
-						>
-							{new Date().toLocaleDateString("en-PH", {
-								weekday: "long",
-								month: "long",
-								day: "numeric",
-							})}
-						</Text>
-					</View>
+				<View style={{ marginHorizontal: 24, marginTop: 24 }}>
+					{/* Top Row — Greeting + Badge */}
 					<View
 						style={{
-							backgroundColor: "rgba(255,255,255,0.2)",
-							paddingHorizontal: 12,
-							paddingVertical: 6,
-							borderRadius: 20,
+							flexDirection: "row",
+							justifyContent: "space-between",
+							alignItems: "flex-start",
+							marginBottom: 20,
 						}}
 					>
-						<Text
+						<View>
+							<Text
+								style={{
+									color: "rgba(255,255,255,0.95)",
+									fontSize: 16,
+									fontFamily: Fonts.semiBold,
+								}}
+							>
+								{userName ? `Hi, ${userName}! 👋` : "Welcome! 👋"}
+							</Text>
+							<Text
+								style={{
+									color: "rgba(255,255,255,0.55)",
+									fontSize: 12,
+									fontFamily: Fonts.regular,
+									marginTop: 3,
+								}}
+							>
+								{new Date().toLocaleDateString("en-PH", {
+									weekday: "long",
+									month: "long",
+									day: "numeric",
+								})}
+							</Text>
+						</View>
+						<View
 							style={{
-								color: "white",
-								fontSize: 12,
-								fontFamily: Fonts.semiBold,
+								backgroundColor: "rgba(255,255,255,0.2)",
+								paddingHorizontal: 12,
+								paddingVertical: 6,
+								borderRadius: 20,
 							}}
 						>
-							{debts.length} {debts.length === 1 ? "debt" : "debts"}
-						</Text>
+							<Text
+								style={{
+									color: "white",
+									fontSize: 12,
+									fontFamily: Fonts.semiBold,
+								}}
+							>
+								{debts.length} {debts.length === 1 ? "debt" : "debts"}
+							</Text>
+						</View>
 					</View>
-				</View>
 
-				{/* Total Debt */}
-				<Text
-					style={{
-						color: "rgba(255,255,255,0.65)",
-						fontSize: 12,
-						fontFamily: Fonts.medium,
-						letterSpacing: 1.5,
-						textTransform: "uppercase",
-					}}
-				>
-					Total Debt
-				</Text>
-				<Text
-					style={{
-						color: "white",
-						fontSize: 44,
-						fontFamily: Fonts.bold,
-						marginTop: 4,
-						letterSpacing: -1,
-					}}
-				>
-					{currencySymbol}
-					{totalDebt.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-				</Text>
+					{/* Total Debt */}
+					<Text
+						style={{
+							color: "rgba(255,255,255,0.65)",
+							fontSize: 12,
+							fontFamily: Fonts.medium,
+							letterSpacing: 1.5,
+							textTransform: "uppercase",
+						}}
+					>
+						Total Debt
+					</Text>
+					<Text
+						style={{
+							color: "white",
+							fontSize: 44,
+							fontFamily: Fonts.bold,
+							marginTop: 4,
+							letterSpacing: -1,
+						}}
+					>
+						{currencySymbol}
+						{totalDebt.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+					</Text>
+				</View>
 
 				{/* Divider */}
 				<View
@@ -132,7 +133,14 @@ export default function Dashboard() {
 				/>
 
 				{/* Bottom Stats */}
-				<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "space-between",
+						marginHorizontal: 24,
+						marginBottom: 24,
+					}}
+				>
 					<View>
 						<Text
 							style={{
@@ -333,7 +341,7 @@ export default function Dashboard() {
 									}}
 								>
 									{debt.interest_rate}% • {currencySymbol}
-									{debt.min_payment}/mo
+									{debt.min_payment}/month
 								</Text>
 							</View>
 

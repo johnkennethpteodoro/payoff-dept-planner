@@ -181,7 +181,7 @@ export default function Progress() {
 					style={{
 						flex: 1,
 						backgroundColor: Colors.card,
-						borderRadius: 16,
+						borderRadius: 24,
 						padding: 18,
 						borderWidth: 1,
 						borderColor: Colors.border,
@@ -226,7 +226,7 @@ export default function Progress() {
 					style={{
 						flex: 1,
 						backgroundColor: Colors.card,
-						borderRadius: 16,
+						borderRadius: 24,
 						padding: 18,
 						borderWidth: 1,
 						borderColor: paidDebts.length > 0 ? Colors.success + "40" : Colors.border,

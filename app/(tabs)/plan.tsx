@@ -82,31 +82,32 @@ export default function Plan() {
 				end={{ x: 1, y: 0 }}
 				style={{
 					borderRadius: 24,
-					padding: 24,
 				}}
 			>
-				{/* Top — Debt Free Date */}
-				<Text
-					style={{
-						color: "rgba(255,255,255,0.65)",
-						fontSize: 12,
-						fontFamily: Fonts.medium,
-						letterSpacing: 1.2,
-						textTransform: "uppercase",
-					}}
-				>
-					Debt Free By
-				</Text>
-				<Text
-					style={{
-						color: "white",
-						fontSize: 28,
-						fontFamily: Fonts.bold,
-						marginTop: 4,
-					}}
-				>
-					{maxMonths > 0 ? getDebtFreeDate(maxMonths) : "--"}
-				</Text>
+				<View style={{ marginHorizontal: 24, marginTop: 24 }}>
+					{/* Top — Debt Free Date */}
+					<Text
+						style={{
+							color: "rgba(255,255,255,0.65)",
+							fontSize: 12,
+							fontFamily: Fonts.medium,
+							letterSpacing: 1.2,
+							textTransform: "uppercase",
+						}}
+					>
+						Debt Free By
+					</Text>
+					<Text
+						style={{
+							color: "white",
+							fontSize: 28,
+							fontFamily: Fonts.bold,
+							marginTop: 4,
+						}}
+					>
+						{maxMonths > 0 ? getDebtFreeDate(maxMonths) : "--"}
+					</Text>
+				</View>
 
 				<View
 					style={{
@@ -117,7 +118,14 @@ export default function Plan() {
 				/>
 
 				{/* Bottom Row */}
-				<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "space-between",
+						marginBottom: 24,
+						marginHorizontal: 24,
+					}}
+				>
 					<View>
 						<Text
 							style={{

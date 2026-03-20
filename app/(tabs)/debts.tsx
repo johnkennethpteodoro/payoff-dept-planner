@@ -1,3 +1,17 @@
+import Colors, { Fonts } from "../../constants/colors";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useFocusEffect } from "expo-router";
+import { getSettings } from "../../lib/storage";
+import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useState } from "react";
+import {
+	getAllDebts,
+	getPaidDebts,
+	deleteDebt,
+	markDebtAsPaid,
+	logPaymentWithHistory,
+	Debt,
+} from "../../lib/database";
 import {
 	View,
 	Text,
@@ -9,20 +23,6 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 } from "react-native";
-import Colors, { Fonts } from "../../constants/colors";
-import { LinearGradient } from "expo-linear-gradient";
-import { router, useFocusEffect } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useState } from "react";
-import {
-	getAllDebts,
-	getPaidDebts,
-	deleteDebt,
-	markDebtAsPaid,
-	logPaymentWithHistory,
-	Debt,
-} from "../../lib/database";
-import { getSettings } from "../../lib/storage";
 
 export default function Debts() {
 	const [debts, setDebts] = useState<Debt[]>([]);
@@ -31,7 +31,9 @@ export default function Debts() {
 	const [showPaid, setShowPaid] = useState(false);
 	const [showPaymentModal, setShowPaymentModal] = useState(false);
 	const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
-	const [paymentAmount, setPaymentAmount] = useState("");
+	const [paymentAmount, setPaymentAmount] = useState(""); // raw numeric string e.g. "10000.50"
+	const [paymentDisplay, setPaymentDisplay] = useState(""); // formatted display e.g. "10,000.50"
+	const [paymentError, setPaymentError] = useState("");
 
 	useFocusEffect(
 		useCallback(() => {
@@ -47,21 +49,88 @@ export default function Debts() {
 
 	const handleLogPayment = (debt: Debt) => {
 		setSelectedDebt(debt);
-		setPaymentAmount(debt.min_payment.toString());
+		const initial = debt.min_payment.toFixed(2);
+		setPaymentAmount(initial);
+		setPaymentDisplay(formatWithCommas(initial));
+		setPaymentError("");
 		setShowPaymentModal(true);
+	};
+
+	// Format a raw numeric string into comma-separated display string
+	const formatWithCommas = (raw: string): string => {
+		if (!raw) return "";
+		const [intPart, decPart] = raw.split(".");
+		const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+	};
+
+	// Handles decimal-following input with live comma formatting
+	const handleAmountChange = (text: string) => {
+		// Strip commas to get raw input, keep only digits and one dot
+		const stripped = text.replace(/,/g, "");
+		const cleaned = stripped.replace(/[^0-9.]/g, "");
+
+		// Prevent multiple dots
+		const parts = cleaned.split(".");
+		let raw = parts[0];
+		if (parts.length > 1) {
+			raw += "." + parts[1].slice(0, 2);
+		}
+
+		// Format integer part with commas for display
+		const display = formatWithCommas(raw);
+
+		setPaymentAmount(raw);
+		setPaymentDisplay(display);
+
+		// Validate against min/max
+		const amount = parseFloat(raw);
+		if (!raw || isNaN(amount)) {
+			setPaymentError("");
+			return;
+		}
+
+		const min = selectedDebt?.min_payment ?? 0;
+		const max = selectedDebt?.balance ?? 0;
+
+		if (amount < min) {
+			setPaymentError(
+				`Minimum payment is ${currencySymbol}${min.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`,
+			);
+		} else if (amount > max) {
+			setPaymentError(
+				`Maximum payment is ${currencySymbol}${max.toLocaleString("en-PH", { minimumFractionDigits: 2 })} (full balance)`,
+			);
+		} else {
+			setPaymentError("");
+		}
 	};
 
 	const handleSavePayment = () => {
 		if (!selectedDebt) return;
+
 		const amount = parseFloat(paymentAmount);
-		if (isNaN(amount) || amount <= 0) {
+		if (!paymentAmount || isNaN(amount) || amount <= 0) {
 			Alert.alert("Invalid Amount", "Please enter a valid payment amount.");
 			return;
 		}
-		if (amount > selectedDebt.balance) {
+
+		const min = selectedDebt.min_payment;
+		const max = selectedDebt.balance;
+
+		if (amount < min) {
 			Alert.alert(
-				"Amount Exceeds Balance",
-				`Your balance is only ${currencySymbol}${selectedDebt.balance.toLocaleString()}. Do you want to mark this debt as complete?`,
+				"Below Minimum Payment",
+				`The minimum payment for "${selectedDebt.name}" is ${currencySymbol}${min.toLocaleString("en-PH", { minimumFractionDigits: 2 })}. Please enter at least this amount.`,
+			);
+			return;
+		}
+
+		// If amount equals the full balance, mark as complete
+		if (amount >= max) {
+			Alert.alert(
+				"Pay Off Completely?",
+				`This will fully pay off "${selectedDebt.name}". Mark it as complete?`,
 				[
 					{ text: "Cancel", style: "cancel" },
 					{
@@ -70,6 +139,9 @@ export default function Debts() {
 							markDebtAsPaid(selectedDebt.id!);
 							loadDebts();
 							setShowPaymentModal(false);
+							setPaymentAmount("");
+							setPaymentDisplay("");
+							setPaymentError("");
 							Alert.alert(
 								"🎉 Amazing!",
 								`"${selectedDebt.name}" is complete! Keep going!`,
@@ -85,6 +157,8 @@ export default function Debts() {
 		loadDebts();
 		setShowPaymentModal(false);
 		setPaymentAmount("");
+		setPaymentDisplay("");
+		setPaymentError("");
 
 		const updatedDebt = getAllDebts().find((d) => d.id === selectedDebt.id);
 		if (!updatedDebt) {
@@ -129,6 +203,13 @@ export default function Debts() {
 	const totalBalance = debts.reduce((sum, d) => sum + d.balance, 0);
 	const totalMinPayment = debts.reduce((sum, d) => sum + d.min_payment, 0);
 
+	const parsedAmount = parseFloat(paymentAmount);
+	const isValidAmount =
+		paymentAmount !== "" &&
+		!isNaN(parsedAmount) &&
+		parsedAmount >= (selectedDebt?.min_payment ?? 0) &&
+		parsedAmount <= (selectedDebt?.balance ?? Infinity);
+
 	return (
 		<>
 			<ScrollView
@@ -142,31 +223,38 @@ export default function Debts() {
 						colors={["#E53935", "#8B0000"]}
 						start={{ x: 0, y: 0 }}
 						end={{ x: 1, y: 0 }}
-						style={{ borderRadius: 24, padding: 24 }}
+						style={{ borderRadius: 24 }}
 					>
-						<Text
+						<View
 							style={{
-								color: "rgba(255,255,255,0.65)",
-								fontSize: 12,
-								fontFamily: Fonts.medium,
-								letterSpacing: 1.2,
-								textTransform: "uppercase",
+								marginHorizontal: 24,
+								marginTop: 24,
 							}}
 						>
-							Total Balance
-						</Text>
-						<Text
-							style={{
-								color: "white",
-								fontSize: 38,
-								fontFamily: Fonts.bold,
-								marginTop: 4,
-								letterSpacing: -1,
-							}}
-						>
-							{currencySymbol}
-							{totalBalance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-						</Text>
+							<Text
+								style={{
+									color: "rgba(255,255,255,0.65)",
+									fontSize: 12,
+									fontFamily: Fonts.medium,
+									letterSpacing: 1.2,
+									textTransform: "uppercase",
+								}}
+							>
+								Total Balance
+							</Text>
+							<Text
+								style={{
+									color: "white",
+									fontSize: 38,
+									fontFamily: Fonts.bold,
+									marginTop: 4,
+									letterSpacing: -1,
+								}}
+							>
+								{currencySymbol}
+								{totalBalance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+							</Text>
+						</View>
 						<View
 							style={{
 								height: 1,
@@ -174,7 +262,14 @@ export default function Debts() {
 								marginVertical: 16,
 							}}
 						/>
-						<View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+						<View
+							style={{
+								flexDirection: "row",
+								justifyContent: "space-between",
+								marginHorizontal: 24,
+								marginBottom: 24,
+							}}
+						>
 							<View>
 								<Text
 									style={{
@@ -339,7 +434,6 @@ export default function Debts() {
 										style={{
 											backgroundColor: Colors.card,
 											borderRadius: 16,
-											padding: 16,
 											borderWidth: 1,
 											borderColor: Colors.border,
 										}}
@@ -349,6 +443,8 @@ export default function Debts() {
 												flexDirection: "row",
 												justifyContent: "space-between",
 												alignItems: "flex-start",
+												marginHorizontal: 16,
+												marginTop: 16,
 											}}
 										>
 											<View style={{ flex: 1 }}>
@@ -408,6 +504,7 @@ export default function Debts() {
 													flexDirection: "row",
 													alignItems: "center",
 													gap: 4,
+													marginHorizontal: 16,
 												}}
 											>
 												<Ionicons
@@ -445,13 +542,19 @@ export default function Debts() {
 													}}
 												>
 													{currencySymbol}
-													{debt.min_payment}/mo
+													{debt.min_payment}/month
 												</Text>
 											</View>
 										</View>
 
 										<View
-											style={{ flexDirection: "row", gap: 8, marginTop: 10 }}
+											style={{
+												flexDirection: "row",
+												gap: 8,
+												marginTop: 10,
+												marginHorizontal: 16,
+												marginBottom: 16,
+											}}
 										>
 											<TouchableOpacity
 												onPress={() => handleLogPayment(debt)}
@@ -462,6 +565,7 @@ export default function Debts() {
 													justifyContent: "center",
 													gap: 4,
 													backgroundColor: Colors.primary,
+													paddingHorizontal: 12,
 													paddingVertical: 10,
 													borderRadius: 10,
 												}}
@@ -592,7 +696,6 @@ export default function Debts() {
 															color: Colors.textSecondary,
 															fontSize: 15,
 															fontFamily: Fonts.semiBold,
-															textDecorationLine: "line-through",
 														}}
 													>
 														{debt.name}
@@ -615,8 +718,8 @@ export default function Debts() {
 												>
 													<Ionicons
 														name="trash-outline"
-														size={16}
-														color={Colors.textLight}
+														size={18}
+														color={Colors.danger}
 													/>
 												</TouchableOpacity>
 											</View>
@@ -628,7 +731,7 @@ export default function Debts() {
 				)}
 			</ScrollView>
 
-			{/* Log Payment Modal — KeyboardAvoidingView fixes keyboard covering UI */}
+			{/* Log Payment Modal */}
 			<Modal
 				visible={showPaymentModal}
 				transparent
@@ -686,38 +789,85 @@ export default function Debts() {
 							</TouchableOpacity>
 						</View>
 
-						{/* Current Balance */}
+						{/* Min / Max info row */}
 						<View
 							style={{
-								backgroundColor: Colors.card2,
-								borderRadius: 12,
-								padding: 14,
 								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "center",
+								gap: 8,
 							}}
 						>
-							<Text
+							<View
 								style={{
-									color: Colors.textSecondary,
-									fontSize: 13,
-									fontFamily: Fonts.medium,
+									flex: 1,
+									backgroundColor: Colors.card2,
+									borderRadius: 12,
+									padding: 12,
+									alignItems: "center",
+									borderWidth: 1,
+									borderColor: Colors.border,
 								}}
 							>
-								Current Balance
-							</Text>
-							<Text
+								<Text
+									style={{
+										color: Colors.textSecondary,
+										fontSize: 10,
+										fontFamily: Fonts.medium,
+										textTransform: "uppercase",
+										letterSpacing: 0.8,
+									}}
+								>
+									Min Payment
+								</Text>
+								<Text
+									style={{
+										color: Colors.text,
+										fontSize: 14,
+										fontFamily: Fonts.bold,
+										marginTop: 4,
+									}}
+								>
+									{currencySymbol}
+									{selectedDebt?.min_payment.toLocaleString("en-PH", {
+										minimumFractionDigits: 2,
+									})}
+								</Text>
+							</View>
+							<View
 								style={{
-									color: Colors.primary,
-									fontSize: 18,
-									fontFamily: Fonts.bold,
+									flex: 1,
+									backgroundColor: Colors.card2,
+									borderRadius: 12,
+									padding: 12,
+									alignItems: "center",
+									borderWidth: 1,
+									borderColor: Colors.border,
 								}}
 							>
-								{currencySymbol}
-								{selectedDebt?.balance.toLocaleString("en-PH", {
-									minimumFractionDigits: 2,
-								})}
-							</Text>
+								<Text
+									style={{
+										color: Colors.textSecondary,
+										fontSize: 10,
+										fontFamily: Fonts.medium,
+										textTransform: "uppercase",
+										letterSpacing: 0.8,
+									}}
+								>
+									Max (Balance)
+								</Text>
+								<Text
+									style={{
+										color: Colors.primary,
+										fontSize: 14,
+										fontFamily: Fonts.bold,
+										marginTop: 4,
+									}}
+								>
+									{currencySymbol}
+									{selectedDebt?.balance.toLocaleString("en-PH", {
+										minimumFractionDigits: 2,
+									})}
+								</Text>
+							</View>
 						</View>
 
 						{/* Payment Amount Input */}
@@ -735,8 +885,8 @@ export default function Debts() {
 								Payment Amount ({currencySymbol})
 							</Text>
 							<TextInput
-								value={paymentAmount}
-								onChangeText={setPaymentAmount}
+								value={paymentDisplay}
+								onChangeText={handleAmountChange}
 								placeholder="0.00"
 								placeholderTextColor={Colors.textLight}
 								keyboardType="decimal-pad"
@@ -745,14 +895,34 @@ export default function Debts() {
 									backgroundColor: Colors.card2,
 									padding: 16,
 									borderRadius: 14,
-									color: Colors.text,
+									color: paymentError ? Colors.danger : Colors.text,
 									borderWidth: 1.5,
-									borderColor: paymentAmount ? Colors.primary : Colors.border,
+									borderColor: paymentError
+										? Colors.danger
+										: paymentAmount && isValidAmount
+											? Colors.success
+											: paymentAmount
+												? Colors.border
+												: Colors.border,
 									fontSize: 24,
 									fontFamily: Fonts.bold,
 									textAlign: "center",
 								}}
 							/>
+							{/* Inline error message */}
+							{paymentError ? (
+								<Text
+									style={{
+										color: Colors.danger,
+										fontSize: 12,
+										fontFamily: Fonts.medium,
+										marginTop: 6,
+										textAlign: "center",
+									}}
+								>
+									{paymentError}
+								</Text>
+							) : null}
 						</View>
 
 						{/* Quick Amount Buttons */}
@@ -761,47 +931,51 @@ export default function Debts() {
 								selectedDebt?.min_payment || 0,
 								(selectedDebt?.min_payment || 0) * 1.5,
 								(selectedDebt?.min_payment || 0) * 2,
-							].map((amount, index) => (
-								<TouchableOpacity
-									key={index}
-									onPress={() => setPaymentAmount(amount.toFixed(0))}
-									style={{
-										flex: 1,
-										padding: 10,
-										backgroundColor: Colors.card2,
-										borderRadius: 10,
-										alignItems: "center",
-										borderWidth: 1,
-										borderColor: Colors.border,
-									}}
-								>
-									<Text
+							].map((amount, index) => {
+								// Cap quick-select buttons at the balance
+								const capped = Math.min(amount, selectedDebt?.balance || amount);
+								return (
+									<TouchableOpacity
+										key={index}
+										onPress={() => handleAmountChange(capped.toFixed(2))}
 										style={{
-											color: Colors.textSecondary,
-											fontSize: 10,
-											fontFamily: Fonts.medium,
-											textTransform: "uppercase",
+											flex: 1,
+											padding: 10,
+											backgroundColor: Colors.card2,
+											borderRadius: 10,
+											alignItems: "center",
+											borderWidth: 1,
+											borderColor: Colors.border,
 										}}
 									>
-										{index === 0 ? "Min" : index === 1 ? "1.5x" : "2x"}
-									</Text>
-									<Text
-										style={{
-											color: Colors.text,
-											fontSize: 13,
-											fontFamily: Fonts.bold,
-											marginTop: 2,
-										}}
-									>
-										{currencySymbol}
-										{amount.toFixed(0)}
-									</Text>
-								</TouchableOpacity>
-							))}
+										<Text
+											style={{
+												color: Colors.textSecondary,
+												fontSize: 10,
+												fontFamily: Fonts.medium,
+												textTransform: "uppercase",
+											}}
+										>
+											{index === 0 ? "Min" : index === 1 ? "1.5x" : "2x"}
+										</Text>
+										<Text
+											style={{
+												color: Colors.text,
+												fontSize: 13,
+												fontFamily: Fonts.bold,
+												marginTop: 2,
+											}}
+										>
+											{currencySymbol}
+											{capped.toFixed(2)}
+										</Text>
+									</TouchableOpacity>
+								);
+							})}
 						</View>
 
 						{/* New Balance Preview */}
-						{paymentAmount && !isNaN(parseFloat(paymentAmount)) && (
+						{paymentAmount && !isNaN(parsedAmount) && isValidAmount && (
 							<View
 								style={{
 									backgroundColor: Colors.success + "15",
@@ -833,20 +1007,22 @@ export default function Debts() {
 									{currencySymbol}
 									{Math.max(
 										0,
-										(selectedDebt?.balance || 0) - parseFloat(paymentAmount),
+										(selectedDebt?.balance || 0) - parsedAmount,
 									).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
 								</Text>
 							</View>
 						)}
 
-						{/* Confirm Button */}
+						{/* Confirm Button — disabled when invalid */}
 						<TouchableOpacity
 							onPress={handleSavePayment}
+							disabled={!isValidAmount}
 							style={{
-								backgroundColor: Colors.primary,
+								backgroundColor: isValidAmount ? Colors.primary : Colors.border,
 								padding: 18,
 								borderRadius: 16,
 								alignItems: "center",
+								opacity: isValidAmount ? 1 : 0.5,
 							}}
 						>
 							<Text

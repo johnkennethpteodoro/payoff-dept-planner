@@ -117,6 +117,7 @@ export default function AddDebt() {
 								key={cat.label}
 								onPress={() => handleCategorySelect(cat.label)}
 								style={{
+									width: "48.5%", // 2 columns with gap
 									flexDirection: "row",
 									alignItems: "center",
 									gap: 6,
