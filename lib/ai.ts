@@ -20,7 +20,17 @@ function generateOfflineResponse(message: string, debts: Debt[], settings: AppSe
 		return `You haven't added any debts yet! Start by tapping "Add New Debt" on the dashboard. Once you add your debts, I can give you a personalized payoff plan! 💪`;
 	}
 
-	if (msg.includes("hi") || msg.includes("hello") || msg.includes("hey")) {
+	if (
+		msg.includes("hi") ||
+		msg.includes("hello") ||
+		msg.includes("hey") ||
+		msg.includes("good morning") ||
+		msg.includes("good afternoon") ||
+		msg.includes("good evening") ||
+		msg.includes("kumusta") ||
+		msg.includes("kamusta") ||
+		msg.match(/^(hi|hey|hello|yo|sup)[\s!?.]*$/)
+	) {
 		return `Hi${settings.userName ? `, ${settings.userName}` : ""}! 👋 I'm your AI Debt Coach. You currently have ${debts.length} active ${debts.length === 1 ? "debt" : "debts"} totaling ${symbol}${totalDebt.toLocaleString()}. How can I help you today?`;
 	}
 

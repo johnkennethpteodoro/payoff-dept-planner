@@ -1,9 +1,19 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import {
+	View,
+	Text,
+	ScrollView,
+	TouchableOpacity,
+	Alert,
+	TextInput,
+	Modal,
+	KeyboardAvoidingView,
+	Platform,
+} from "react-native";
 import Colors, { Fonts } from "../../constants/colors";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useState } from "react";
 import {
 	getAllDebts,
 	getPaidDebts,
@@ -334,7 +344,6 @@ export default function Debts() {
 											borderColor: Colors.border,
 										}}
 									>
-										{/* Top Row */}
 										<View
 											style={{
 												flexDirection: "row",
@@ -383,7 +392,6 @@ export default function Debts() {
 											</TouchableOpacity>
 										</View>
 
-										{/* Details Row */}
 										<View
 											style={{
 												flexDirection: "row",
@@ -442,15 +450,9 @@ export default function Debts() {
 											</View>
 										</View>
 
-										{/* Action Buttons Row */}
 										<View
-											style={{
-												flexDirection: "row",
-												gap: 8,
-												marginTop: 10,
-											}}
+											style={{ flexDirection: "row", gap: 8, marginTop: 10 }}
 										>
-											{/* Log Payment Button */}
 											<TouchableOpacity
 												onPress={() => handleLogPayment(debt)}
 												style={{
@@ -480,7 +482,6 @@ export default function Debts() {
 												</Text>
 											</TouchableOpacity>
 
-											{/* Mark Complete Button */}
 											<TouchableOpacity
 												onPress={() =>
 													handleMarkComplete(debt.id!, debt.name)
@@ -627,14 +628,15 @@ export default function Debts() {
 				)}
 			</ScrollView>
 
-			{/* Log Payment Modal */}
+			{/* Log Payment Modal — KeyboardAvoidingView fixes keyboard covering UI */}
 			<Modal
 				visible={showPaymentModal}
 				transparent
 				animationType="slide"
 				onRequestClose={() => setShowPaymentModal(false)}
 			>
-				<View
+				<KeyboardAvoidingView
+					behavior={Platform.OS === "ios" ? "padding" : "height"}
 					style={{
 						flex: 1,
 						backgroundColor: "rgba(0,0,0,0.75)",
@@ -762,7 +764,7 @@ export default function Debts() {
 							].map((amount, index) => (
 								<TouchableOpacity
 									key={index}
-									onPress={() => setPaymentAmount(amount!.toFixed(0))}
+									onPress={() => setPaymentAmount(amount.toFixed(0))}
 									style={{
 										flex: 1,
 										padding: 10,
@@ -792,7 +794,7 @@ export default function Debts() {
 										}}
 									>
 										{currencySymbol}
-										{amount!.toFixed(0)}
+										{amount.toFixed(0)}
 									</Text>
 								</TouchableOpacity>
 							))}
@@ -858,7 +860,7 @@ export default function Debts() {
 							</Text>
 						</TouchableOpacity>
 					</View>
-				</View>
+				</KeyboardAvoidingView>
 			</Modal>
 		</>
 	);

@@ -1,9 +1,18 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import Colors, { Fonts } from "../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { addDebt } from "../lib/database";
 import { router } from "expo-router";
 import { useState } from "react";
+import {
+	View,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	ScrollView,
+	Alert,
+	KeyboardAvoidingView,
+	Platform,
+} from "react-native";
 
 const DEBT_CATEGORIES = [
 	{ label: "Credit Card", icon: "card-outline" },
@@ -35,9 +44,7 @@ export default function AddDebt() {
 		return parts.join(".");
 	};
 
-	const unformatNumber = (value: string): string => {
-		return value.replace(/,/g, "");
-	};
+	const unformatNumber = (value: string): string => value.replace(/,/g, "");
 
 	const handleCategorySelect = (label: string) => {
 		setSelectedCategory(label);
@@ -78,78 +85,18 @@ export default function AddDebt() {
 	};
 
 	return (
-		<ScrollView
+		<KeyboardAvoidingView
 			style={{ flex: 1, backgroundColor: Colors.background }}
-			contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 60 }}
-			showsVerticalScrollIndicator={false}
+			behavior={Platform.OS === "ios" ? "padding" : "height"}
+			keyboardVerticalOffset={90}
 		>
-			{/* Step 1 — Pick Category */}
-			<View>
-				<Text
-					style={{
-						color: Colors.textSecondary,
-						fontSize: 11,
-						fontFamily: Fonts.medium,
-						letterSpacing: 0.8,
-						textTransform: "uppercase",
-						marginBottom: 12,
-					}}
-				>
-					What type of debt?
-				</Text>
-
-				<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-					{DEBT_CATEGORIES.map((cat) => (
-						<TouchableOpacity
-							key={cat.label}
-							onPress={() => handleCategorySelect(cat.label)}
-							style={{
-								flexDirection: "row",
-								alignItems: "center",
-								gap: 6,
-								paddingHorizontal: 14,
-								paddingVertical: 10,
-								borderRadius: 12,
-								borderWidth: 1.5,
-								borderColor:
-									selectedCategory === cat.label ? Colors.primary : Colors.border,
-								backgroundColor:
-									selectedCategory === cat.label
-										? Colors.primary + "15"
-										: Colors.card,
-							}}
-						>
-							<Ionicons
-								name={cat.icon as any}
-								size={16}
-								color={
-									selectedCategory === cat.label
-										? Colors.primary
-										: Colors.textSecondary
-								}
-							/>
-							<Text
-								style={{
-									color:
-										selectedCategory === cat.label
-											? Colors.primary
-											: Colors.textSecondary,
-									fontSize: 13,
-									fontFamily:
-										selectedCategory === cat.label
-											? Fonts.semiBold
-											: Fonts.regular,
-								}}
-							>
-								{cat.label}
-							</Text>
-						</TouchableOpacity>
-					))}
-				</View>
-			</View>
-
-			{/* Custom Name */}
-			{showCustom && (
+			<ScrollView
+				contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
+				showsVerticalScrollIndicator={false}
+				keyboardShouldPersistTaps="handled"
+				keyboardDismissMode="on-drag"
+			>
+				{/* Step 1 — Pick Category */}
 				<View>
 					<Text
 						style={{
@@ -158,220 +105,291 @@ export default function AddDebt() {
 							fontFamily: Fonts.medium,
 							letterSpacing: 0.8,
 							textTransform: "uppercase",
-							marginBottom: 8,
+							marginBottom: 12,
 						}}
 					>
-						Custom Debt Name
+						What type of debt?
 					</Text>
-					<TextInput
-						value={name}
-						onChangeText={setName}
-						placeholder="e.g. Sari-sari store loan"
-						placeholderTextColor={Colors.textLight}
-						autoFocus
-						style={{
-							backgroundColor: Colors.card,
-							padding: 16,
-							borderRadius: 14,
-							color: Colors.text,
-							borderWidth: 1,
-							borderColor: name ? Colors.primary : Colors.border,
-							fontSize: 16,
-							fontFamily: Fonts.regular,
-						}}
-					/>
+
+					<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+						{DEBT_CATEGORIES.map((cat) => (
+							<TouchableOpacity
+								key={cat.label}
+								onPress={() => handleCategorySelect(cat.label)}
+								style={{
+									flexDirection: "row",
+									alignItems: "center",
+									gap: 6,
+									paddingHorizontal: 14,
+									paddingVertical: 10,
+									borderRadius: 12,
+									borderWidth: 1.5,
+									borderColor:
+										selectedCategory === cat.label
+											? Colors.primary
+											: Colors.border,
+									backgroundColor:
+										selectedCategory === cat.label
+											? Colors.primary + "15"
+											: Colors.card,
+								}}
+							>
+								<Ionicons
+									name={cat.icon as any}
+									size={16}
+									color={
+										selectedCategory === cat.label
+											? Colors.primary
+											: Colors.textSecondary
+									}
+								/>
+								<Text
+									style={{
+										color:
+											selectedCategory === cat.label
+												? Colors.primary
+												: Colors.textSecondary,
+										fontSize: 13,
+										fontFamily:
+											selectedCategory === cat.label
+												? Fonts.semiBold
+												: Fonts.regular,
+									}}
+								>
+									{cat.label}
+								</Text>
+							</TouchableOpacity>
+						))}
+					</View>
 				</View>
-			)}
 
-			{/* Step 2 — Debt Details */}
-			{selectedCategory !== "" && (
-				<>
-					<View style={{ height: 1, backgroundColor: Colors.border }} />
-
-					<Text
-						style={{
-							color: Colors.textSecondary,
-							fontSize: 11,
-							fontFamily: Fonts.medium,
-							letterSpacing: 0.8,
-							textTransform: "uppercase",
-						}}
-					>
-						Debt Details
-					</Text>
-
-					{/* Selected debt name display */}
-					{!showCustom && (
-						<View
+				{/* Custom Name */}
+				{showCustom && (
+					<View>
+						<Text
 							style={{
-								flexDirection: "row",
-								alignItems: "center",
-								gap: 10,
-								padding: 14,
-								backgroundColor: Colors.primary + "15",
-								borderRadius: 12,
-								borderWidth: 1,
-								borderColor: Colors.primary + "40",
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 0.8,
+								textTransform: "uppercase",
+								marginBottom: 8,
 							}}
 						>
-							<Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+							Custom Debt Name
+						</Text>
+						<TextInput
+							value={name}
+							onChangeText={setName}
+							placeholder="e.g. Sari-sari store loan"
+							placeholderTextColor={Colors.textLight}
+							autoFocus
+							style={{
+								backgroundColor: Colors.card,
+								padding: 16,
+								borderRadius: 14,
+								color: Colors.text,
+								borderWidth: 1,
+								borderColor: name ? Colors.primary : Colors.border,
+								fontSize: 16,
+								fontFamily: Fonts.regular,
+							}}
+						/>
+					</View>
+				)}
+
+				{/* Step 2 — Debt Details */}
+				{selectedCategory !== "" && (
+					<>
+						<Text
+							style={{
+								color: Colors.textSecondary,
+								fontSize: 11,
+								fontFamily: Fonts.medium,
+								letterSpacing: 0.8,
+								textTransform: "uppercase",
+							}}
+						>
+							Debt Details
+						</Text>
+
+						{/* Selected debt name display */}
+						{!showCustom && (
+							<View
+								style={{
+									flexDirection: "row",
+									alignItems: "center",
+									gap: 10,
+									padding: 14,
+									backgroundColor: Colors.primary + "15",
+									borderRadius: 12,
+									borderWidth: 1,
+									borderColor: Colors.primary + "40",
+								}}
+							>
+								<Ionicons
+									name="checkmark-circle"
+									size={20}
+									color={Colors.primary}
+								/>
+								<Text
+									style={{
+										color: Colors.primary,
+										fontSize: 14,
+										fontFamily: Fonts.semiBold,
+									}}
+								>
+									{name}
+								</Text>
+							</View>
+						)}
+
+						{/* Balance */}
+						<View>
 							<Text
 								style={{
-									color: Colors.primary,
-									fontSize: 14,
+									color: Colors.textSecondary,
+									fontSize: 11,
+									fontFamily: Fonts.medium,
+									letterSpacing: 0.8,
+									textTransform: "uppercase",
+									marginBottom: 8,
+								}}
+							>
+								Current Balance
+							</Text>
+							<TextInput
+								value={balanceDisplay}
+								onChangeText={(text) => {
+									const raw = unformatNumber(text);
+									setBalance(raw);
+									setBalanceDisplay(formatNumber(raw));
+								}}
+								placeholder="0.00"
+								placeholderTextColor={Colors.textLight}
+								keyboardType="decimal-pad"
+								style={{
+									backgroundColor: Colors.card,
+									padding: 16,
+									borderRadius: 14,
+									color: Colors.text,
+									borderWidth: 1,
+									borderColor: balance ? Colors.primary : Colors.border,
+									fontSize: 16,
+									fontFamily: Fonts.regular,
+								}}
+							/>
+						</View>
+
+						{/* Interest Rate */}
+						<View>
+							<Text
+								style={{
+									color: Colors.textSecondary,
+									fontSize: 11,
+									fontFamily: Fonts.medium,
+									letterSpacing: 0.8,
+									textTransform: "uppercase",
+									marginBottom: 8,
+								}}
+							>
+								Interest Rate (%)
+							</Text>
+							<TextInput
+								value={interest}
+								onChangeText={setInterest}
+								placeholder="0.00"
+								placeholderTextColor={Colors.textLight}
+								keyboardType="decimal-pad"
+								style={{
+									backgroundColor: Colors.card,
+									padding: 16,
+									borderRadius: 14,
+									color: Colors.text,
+									borderWidth: 1,
+									borderColor: interest ? Colors.primary : Colors.border,
+									fontSize: 16,
+									fontFamily: Fonts.regular,
+								}}
+							/>
+						</View>
+
+						{/* Min Payment */}
+						<View>
+							<Text
+								style={{
+									color: Colors.textSecondary,
+									fontSize: 11,
+									fontFamily: Fonts.medium,
+									letterSpacing: 0.8,
+									textTransform: "uppercase",
+									marginBottom: 8,
+								}}
+							>
+								Min. Monthly Payment
+							</Text>
+							<TextInput
+								value={minPaymentDisplay}
+								onChangeText={(text) => {
+									const raw = unformatNumber(text);
+									setMinPayment(raw);
+									setMinPaymentDisplay(formatNumber(raw));
+								}}
+								placeholder="0.00"
+								placeholderTextColor={Colors.textLight}
+								keyboardType="decimal-pad"
+								style={{
+									backgroundColor: Colors.card,
+									padding: 16,
+									borderRadius: 14,
+									color: Colors.text,
+									borderWidth: 1,
+									borderColor: minPayment ? Colors.primary : Colors.border,
+									fontSize: 16,
+									fontFamily: Fonts.regular,
+								}}
+							/>
+						</View>
+
+						{/* Save Button */}
+						<TouchableOpacity
+							style={{
+								backgroundColor: Colors.primary,
+								padding: 18,
+								borderRadius: 16,
+								alignItems: "center",
+								marginTop: 8,
+							}}
+							onPress={handleSave}
+						>
+							<Text
+								style={{
+									color: "white",
+									fontSize: 16,
 									fontFamily: Fonts.semiBold,
 								}}
 							>
-								{name}
+								Save Debt
 							</Text>
-						</View>
-					)}
+						</TouchableOpacity>
 
-					{/* Balance — with auto format */}
-					<View>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-								marginBottom: 8,
-							}}
+						<TouchableOpacity
+							style={{ alignItems: "center", padding: 8 }}
+							onPress={() => router.back()}
 						>
-							Current Balance
-						</Text>
-						<TextInput
-							value={balanceDisplay}
-							onChangeText={(text) => {
-								const raw = unformatNumber(text);
-								setBalance(raw);
-								setBalanceDisplay(formatNumber(raw));
-							}}
-							placeholder="0.00"
-							placeholderTextColor={Colors.textLight}
-							keyboardType="decimal-pad"
-							style={{
-								backgroundColor: Colors.card,
-								padding: 16,
-								borderRadius: 14,
-								color: Colors.text,
-								borderWidth: 1,
-								borderColor: balance ? Colors.primary : Colors.border,
-								fontSize: 16,
-								fontFamily: Fonts.regular,
-							}}
-						/>
-					</View>
-
-					{/* Interest Rate */}
-					<View>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-								marginBottom: 8,
-							}}
-						>
-							Interest Rate (%)
-						</Text>
-						<TextInput
-							value={interest}
-							onChangeText={setInterest}
-							placeholder="0.00"
-							placeholderTextColor={Colors.textLight}
-							keyboardType="decimal-pad"
-							style={{
-								backgroundColor: Colors.card,
-								padding: 16,
-								borderRadius: 14,
-								color: Colors.text,
-								borderWidth: 1,
-								borderColor: interest ? Colors.primary : Colors.border,
-								fontSize: 16,
-								fontFamily: Fonts.regular,
-							}}
-						/>
-					</View>
-
-					{/* Min Payment — with auto format */}
-					<View>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-								marginBottom: 8,
-							}}
-						>
-							Min. Monthly Payment
-						</Text>
-						<TextInput
-							value={minPaymentDisplay}
-							onChangeText={(text) => {
-								const raw = unformatNumber(text);
-								setMinPayment(raw);
-								setMinPaymentDisplay(formatNumber(raw));
-							}}
-							placeholder="0.00"
-							placeholderTextColor={Colors.textLight}
-							keyboardType="decimal-pad"
-							style={{
-								backgroundColor: Colors.card,
-								padding: 16,
-								borderRadius: 14,
-								color: Colors.text,
-								borderWidth: 1,
-								borderColor: minPayment ? Colors.primary : Colors.border,
-								fontSize: 16,
-								fontFamily: Fonts.regular,
-							}}
-						/>
-					</View>
-
-					{/* Save Button */}
-					<TouchableOpacity
-						style={{
-							backgroundColor: Colors.primary,
-							padding: 18,
-							borderRadius: 16,
-							alignItems: "center",
-							marginTop: 8,
-						}}
-						onPress={handleSave}
-					>
-						<Text
-							style={{
-								color: "white",
-								fontSize: 16,
-								fontFamily: Fonts.semiBold,
-							}}
-						>
-							Save Debt
-						</Text>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						style={{ alignItems: "center", padding: 8 }}
-						onPress={() => router.back()}
-					>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 15,
-								fontFamily: Fonts.regular,
-							}}
-						>
-							Cancel
-						</Text>
-					</TouchableOpacity>
-				</>
-			)}
-		</ScrollView>
+							<Text
+								style={{
+									color: Colors.textSecondary,
+									fontSize: 15,
+									fontFamily: Fonts.regular,
+								}}
+							>
+								Cancel
+							</Text>
+						</TouchableOpacity>
+					</>
+				)}
+			</ScrollView>
+		</KeyboardAvoidingView>
 	);
 }

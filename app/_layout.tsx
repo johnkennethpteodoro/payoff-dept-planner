@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { clearAllDebts, initDatabase } from "../lib/database";
 import * as SplashScreen from "expo-splash-screen";
-import { initDatabase } from "../lib/database";
 import { StatusBar } from "expo-status-bar";
 import { Stack, router } from "expo-router";
 import { useEffect } from "react";
@@ -33,6 +33,7 @@ export default function RootLayout() {
 	const checkFirstLaunch = async () => {
 		const hasLaunched = await AsyncStorage.getItem("hasLaunched");
 		if (!hasLaunched) {
+			clearAllDebts();
 			await AsyncStorage.setItem("hasLaunched", "true");
 			router.replace("/onboarding");
 		}
@@ -51,7 +52,7 @@ export default function RootLayout() {
 					options={{
 						title: "Add Debt",
 						presentation: "modal",
-						headerBackTitle: "Back",
+						headerBackButtonDisplayMode: "minimal",
 						headerStyle: { backgroundColor: "#1A1A1A" },
 						headerTintColor: "#FFFFFF",
 						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
@@ -61,7 +62,7 @@ export default function RootLayout() {
 					name="settings"
 					options={{
 						title: "Settings",
-						headerBackTitle: "Back",
+						headerBackButtonDisplayMode: "minimal",
 						headerStyle: { backgroundColor: "#1A1A1A" },
 						headerTintColor: "#FFFFFF",
 						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
@@ -71,7 +72,7 @@ export default function RootLayout() {
 					name="privacy-policy"
 					options={{
 						title: "Privacy Policy",
-						headerBackTitle: "Back",
+						headerBackButtonDisplayMode: "minimal",
 						headerStyle: { backgroundColor: "#1A1A1A" },
 						headerTintColor: "#FFFFFF",
 						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
@@ -81,7 +82,7 @@ export default function RootLayout() {
 					name="terms"
 					options={{
 						title: "Terms of Use",
-						headerBackTitle: "Back",
+						headerBackButtonDisplayMode: "minimal",
 						headerStyle: { backgroundColor: "#1A1A1A" },
 						headerTintColor: "#FFFFFF",
 						headerTitleStyle: { fontFamily: "Inter_600SemiBold" },

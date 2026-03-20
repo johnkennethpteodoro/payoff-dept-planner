@@ -113,7 +113,7 @@ export default function Settings() {
 				)}
 			</View>
 			{right ||
-				(onPress && <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />)}
+				(onPress && <Ionicons name="chevron-forward" size={14} color={Colors.textLight} />)}
 		</TouchableOpacity>
 	);
 
@@ -201,6 +201,7 @@ export default function Settings() {
 					Preferences
 				</Text>
 
+				{/* ✅ FIXED: just opens the modal */}
 				<SettingRow
 					icon="cash-outline"
 					label="Currency"
@@ -221,12 +222,6 @@ export default function Settings() {
 				>
 					About
 				</Text>
-
-				<SettingRow
-					icon="share-outline"
-					label="Share App"
-					onPress={() => Alert.alert("Share", "Share Payoff with friends!")}
-				/>
 
 				<SettingRow
 					icon="shield-checkmark-outline"
@@ -300,8 +295,13 @@ export default function Settings() {
 							<TouchableOpacity
 								key={c.value}
 								onPress={() => {
-									updateSetting("currency", c.value);
-									updateSetting("currencySymbol", c.symbol);
+									const updated = {
+										...settings,
+										currency: c.value,
+										currencySymbol: c.symbol,
+									};
+									setSettings(updated);
+									saveSettings(updated);
 									setShowCurrencyModal(false);
 								}}
 								style={{
