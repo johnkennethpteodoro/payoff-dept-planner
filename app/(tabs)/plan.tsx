@@ -152,29 +152,7 @@ export default function Plan() {
 							})}
 						</Text>
 					</View>
-					<View style={{ alignItems: "center" }}>
-						<Text
-							style={{
-								color: "rgba(255,255,255,0.65)",
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								textTransform: "uppercase",
-								letterSpacing: 1,
-							}}
-						>
-							Duration
-						</Text>
-						<Text
-							style={{
-								color: "white",
-								fontSize: 20,
-								fontFamily: Fonts.bold,
-								marginTop: 4,
-							}}
-						>
-							{maxMonths > 0 ? `${maxMonths} mo.` : "--"}
-						</Text>
-					</View>
+
 					<View style={{ alignItems: "flex-end" }}>
 						<Text
 							style={{

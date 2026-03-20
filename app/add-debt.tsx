@@ -111,7 +111,7 @@ export default function AddDebt() {
 						What type of debt?
 					</Text>
 
-					<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+					<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
 						{DEBT_CATEGORIES.map((cat) => (
 							<TouchableOpacity
 								key={cat.label}
@@ -122,8 +122,8 @@ export default function AddDebt() {
 									alignItems: "center",
 									gap: 6,
 									paddingHorizontal: 14,
-									paddingVertical: 10,
-									borderRadius: 12,
+									paddingVertical: 14,
+									borderRadius: 16,
 									borderWidth: 1.5,
 									borderColor:
 										selectedCategory === cat.label
@@ -202,49 +202,6 @@ export default function AddDebt() {
 				{/* Step 2 — Debt Details */}
 				{selectedCategory !== "" && (
 					<>
-						<Text
-							style={{
-								color: Colors.textSecondary,
-								fontSize: 11,
-								fontFamily: Fonts.medium,
-								letterSpacing: 0.8,
-								textTransform: "uppercase",
-							}}
-						>
-							Debt Details
-						</Text>
-
-						{/* Selected debt name display */}
-						{!showCustom && (
-							<View
-								style={{
-									flexDirection: "row",
-									alignItems: "center",
-									gap: 10,
-									padding: 14,
-									backgroundColor: Colors.primary + "15",
-									borderRadius: 12,
-									borderWidth: 1,
-									borderColor: Colors.primary + "40",
-								}}
-							>
-								<Ionicons
-									name="checkmark-circle"
-									size={20}
-									color={Colors.primary}
-								/>
-								<Text
-									style={{
-										color: Colors.primary,
-										fontSize: 14,
-										fontFamily: Fonts.semiBold,
-									}}
-								>
-									{name}
-								</Text>
-							</View>
-						)}
-
 						{/* Balance */}
 						<View>
 							<Text
@@ -271,7 +228,7 @@ export default function AddDebt() {
 								keyboardType="decimal-pad"
 								style={{
 									backgroundColor: Colors.card,
-									padding: 16,
+									padding: 14,
 									borderRadius: 14,
 									color: Colors.text,
 									borderWidth: 1,
@@ -304,7 +261,7 @@ export default function AddDebt() {
 								keyboardType="decimal-pad"
 								style={{
 									backgroundColor: Colors.card,
-									padding: 16,
+									padding: 14,
 									borderRadius: 14,
 									color: Colors.text,
 									borderWidth: 1,
@@ -341,7 +298,7 @@ export default function AddDebt() {
 								keyboardType="decimal-pad"
 								style={{
 									backgroundColor: Colors.card,
-									padding: 16,
+									padding: 14,
 									borderRadius: 14,
 									color: Colors.text,
 									borderWidth: 1,
@@ -352,42 +309,51 @@ export default function AddDebt() {
 							/>
 						</View>
 
-						{/* Save Button */}
-						<TouchableOpacity
-							style={{
-								backgroundColor: Colors.primary,
-								padding: 18,
-								borderRadius: 16,
-								alignItems: "center",
-								marginTop: 8,
-							}}
-							onPress={handleSave}
-						>
-							<Text
+						<View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+							<TouchableOpacity
 								style={{
-									color: "white",
-									fontSize: 16,
-									fontFamily: Fonts.semiBold,
+									flex: 1,
+									backgroundColor: Colors.card,
+									padding: 15,
+									borderRadius: 16,
+									alignItems: "center",
+									borderWidth: 1,
+									borderColor: Colors.border,
 								}}
+								onPress={() => router.back()}
 							>
-								Save Debt
-							</Text>
-						</TouchableOpacity>
+								<Text
+									style={{
+										color: Colors.textSecondary,
+										fontSize: 14,
+										fontFamily: Fonts.regular,
+									}}
+								>
+									Cancel
+								</Text>
+							</TouchableOpacity>
 
-						<TouchableOpacity
-							style={{ alignItems: "center", padding: 8 }}
-							onPress={() => router.back()}
-						>
-							<Text
+							<TouchableOpacity
 								style={{
-									color: Colors.textSecondary,
-									fontSize: 15,
-									fontFamily: Fonts.regular,
+									flex: 1,
+									backgroundColor: Colors.primary,
+									padding: 15,
+									borderRadius: 16,
+									alignItems: "center",
 								}}
+								onPress={handleSave}
 							>
-								Cancel
-							</Text>
-						</TouchableOpacity>
+								<Text
+									style={{
+										color: "white",
+										fontSize: 14,
+										fontFamily: Fonts.semiBold,
+									}}
+								>
+									Save Debt
+								</Text>
+							</TouchableOpacity>
+						</View>
 					</>
 				)}
 			</ScrollView>
