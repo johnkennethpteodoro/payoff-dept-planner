@@ -76,9 +76,9 @@ export default function Coach() {
 				style={{
 					margin: 16,
 					marginBottom: 8,
-					padding: 16,
+					padding: 8,
 					backgroundColor: Colors.card,
-					borderRadius: 16,
+					borderRadius: 20,
 					borderWidth: 1,
 					borderColor: Colors.border,
 					flexDirection: "row",
@@ -116,7 +116,7 @@ export default function Coach() {
 							marginTop: 2,
 						}}
 					>
-						Works online & offline
+						Works offline
 					</Text>
 				</View>
 			</View>
@@ -151,7 +151,7 @@ export default function Coach() {
 							<Text
 								style={{
 									color: Colors.text,
-									fontSize: 15,
+									fontSize: 13,
 									fontFamily: Fonts.regular,
 									lineHeight: 22,
 								}}
@@ -211,7 +211,7 @@ export default function Coach() {
 						paddingHorizontal: 18,
 						paddingVertical: 12,
 						color: Colors.text,
-						fontSize: 15,
+						fontSize: 13,
 						fontFamily: Fonts.regular,
 						borderWidth: 1,
 						borderColor: Colors.border,
@@ -224,14 +224,14 @@ export default function Coach() {
 					disabled={loading}
 					style={{
 						backgroundColor: loading ? Colors.textLight : Colors.primary,
-						width: 48,
-						height: 48,
+						width: 38,
+						height: 38,
 						borderRadius: 24,
 						alignItems: "center",
 						justifyContent: "center",
 					}}
 				>
-					<Ionicons name="send" size={18} color="white" />
+					<Ionicons name="send" size={16} color="white" />
 				</TouchableOpacity>
 			</View>
 		</KeyboardAvoidingView>

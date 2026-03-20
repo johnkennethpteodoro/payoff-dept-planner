@@ -127,7 +127,7 @@ export default function Dashboard() {
 				<View
 					style={{
 						height: 1,
-						backgroundColor: "rgba(255,255,255,0.2)",
+						backgroundColor: "rgba(255,255,255,0.1)",
 						marginVertical: 16,
 					}}
 				/>
