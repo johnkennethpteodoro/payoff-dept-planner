@@ -1,3 +1,4 @@
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal } from "react-native";
 import Colors, { Fonts } from "../../constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -12,27 +13,16 @@ import {
 	logPaymentWithHistory,
 	Debt,
 } from "../../lib/database";
-import {
-	View,
-	Text,
-	ScrollView,
-	TouchableOpacity,
-	Alert,
-	TextInput,
-	Modal,
-	KeyboardAvoidingView,
-	Platform,
-} from "react-native";
 
 export default function Debts() {
 	const [debts, setDebts] = useState<Debt[]>([]);
 	const [paidDebts, setPaidDebts] = useState<Debt[]>([]);
 	const [currencySymbol, setCurrencySymbol] = useState("₱");
+	const [showActive, setShowActive] = useState(true); // ← new
 	const [showPaid, setShowPaid] = useState(false);
 	const [showPaymentModal, setShowPaymentModal] = useState(false);
 	const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
-	const [paymentAmount, setPaymentAmount] = useState(""); // raw numeric string e.g. "10000.50"
-	const [paymentDisplay, setPaymentDisplay] = useState(""); // formatted display e.g. "10,000.50"
+	const [paymentAmount, setPaymentAmount] = useState("");
 	const [paymentError, setPaymentError] = useState("");
 
 	useFocusEffect(
@@ -49,41 +39,14 @@ export default function Debts() {
 
 	const handleLogPayment = (debt: Debt) => {
 		setSelectedDebt(debt);
-		const initial = debt.min_payment.toFixed(2);
-		setPaymentAmount(initial);
-		setPaymentDisplay(formatWithCommas(initial));
+		setPaymentAmount(debt.min_payment.toFixed(2));
 		setPaymentError("");
 		setShowPaymentModal(true);
 	};
 
-	// Format a raw numeric string into comma-separated display string
-	const formatWithCommas = (raw: string): string => {
-		if (!raw) return "";
-		const [intPart, decPart] = raw.split(".");
-		const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-		return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
-	};
-
-	// Handles decimal-following input with live comma formatting
-	const handleAmountChange = (text: string) => {
-		// Strip commas to get raw input, keep only digits and one dot
-		const stripped = text.replace(/,/g, "");
-		const cleaned = stripped.replace(/[^0-9.]/g, "");
-
-		// Prevent multiple dots
-		const parts = cleaned.split(".");
-		let raw = parts[0];
-		if (parts.length > 1) {
-			raw += "." + parts[1].slice(0, 2);
-		}
-
-		// Format integer part with commas for display
-		const display = formatWithCommas(raw);
-
+	const handleAmountChange = (raw: string) => {
 		setPaymentAmount(raw);
-		setPaymentDisplay(display);
 
-		// Validate against min/max
 		const amount = parseFloat(raw);
 		if (!raw || isNaN(amount)) {
 			setPaymentError("");
@@ -126,7 +89,6 @@ export default function Debts() {
 			return;
 		}
 
-		// If amount equals the full balance, mark as complete
 		if (amount >= max) {
 			Alert.alert(
 				"Pay Off Completely?",
@@ -140,7 +102,6 @@ export default function Debts() {
 							loadDebts();
 							setShowPaymentModal(false);
 							setPaymentAmount("");
-							setPaymentDisplay("");
 							setPaymentError("");
 							Alert.alert(
 								"🎉 Amazing!",
@@ -157,7 +118,6 @@ export default function Debts() {
 		loadDebts();
 		setShowPaymentModal(false);
 		setPaymentAmount("");
-		setPaymentDisplay("");
 		setPaymentError("");
 
 		const updatedDebt = getAllDebts().find((d) => d.id === selectedDebt.id);
@@ -211,11 +171,11 @@ export default function Debts() {
 		parsedAmount <= (selectedDebt?.balance ?? Infinity);
 
 	return (
-		<>
+		<View style={{ flex: 1, backgroundColor: Colors.background }}>
 			<ScrollView
 				style={{ flex: 1, backgroundColor: Colors.background }}
 				showsVerticalScrollIndicator={false}
-				contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 60 }}
+				contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 90 }}
 			>
 				{/* Hero Summary */}
 				{debts.length > 0 && (
@@ -225,12 +185,7 @@ export default function Debts() {
 						end={{ x: 1, y: 0 }}
 						style={{ borderRadius: 24 }}
 					>
-						<View
-							style={{
-								marginHorizontal: 24,
-								marginTop: 24,
-							}}
-						>
+						<View style={{ marginHorizontal: 24, marginTop: 24 }}>
 							<Text
 								style={{
 									color: "rgba(255,255,255,0.65)",
@@ -323,45 +278,6 @@ export default function Debts() {
 					</LinearGradient>
 				)}
 
-				{/* Add Button */}
-				<TouchableOpacity
-					style={{
-						backgroundColor: debts.length > 0 ? Colors.card : Colors.primary,
-						padding: 16,
-						borderRadius: 16,
-						flexDirection: "row",
-						alignItems: "center",
-						justifyContent: "center",
-						gap: 8,
-						borderWidth: debts.length > 0 ? 1 : 0,
-						borderColor: Colors.border,
-					}}
-					onPress={() => router.push("/add-debt")}
-				>
-					<View
-						style={{
-							width: 26,
-							height: 26,
-							borderRadius: 8,
-							backgroundColor:
-								debts.length > 0 ? Colors.primary : "rgba(255,255,255,0.3)",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<Ionicons name="add" size={16} color="white" />
-					</View>
-					<Text
-						style={{
-							color: debts.length > 0 ? Colors.text : "white",
-							fontSize: 15,
-							fontFamily: Fonts.semiBold,
-						}}
-					>
-						Add New Debt
-					</Text>
-				</TouchableOpacity>
-
 				{/* Empty State */}
 				{debts.length === 0 && paidDebts.length === 0 ? (
 					<View
@@ -407,7 +323,11 @@ export default function Debts() {
 								lineHeight: 22,
 							}}
 						>
-							Tap the button above{"\n"}to add your first debt!
+							Tap the{" "}
+							<Text style={{ color: Colors.primary, fontFamily: Fonts.semiBold }}>
+								+ Add Debt
+							</Text>{" "}
+							button{"\n"}to add your first debt!
 						</Text>
 					</View>
 				) : (
@@ -415,212 +335,223 @@ export default function Debts() {
 						{/* Active Debts */}
 						{debts.length > 0 && (
 							<>
-								<Text
+								{/* Collapsible Header — same style as Completed */}
+								<TouchableOpacity
+									onPress={() => setShowActive(!showActive)}
 									style={{
-										color: Colors.textSecondary,
-										fontSize: 11,
-										fontFamily: Fonts.medium,
-										letterSpacing: 0.8,
-										textTransform: "uppercase",
+										flexDirection: "row",
+										justifyContent: "space-between",
+										alignItems: "center",
 										marginTop: 4,
 									}}
 								>
-									Active Debts
-								</Text>
-
-								{debts.map((debt) => (
-									<View
-										key={debt.id}
+									<Text
 										style={{
-											backgroundColor: Colors.card,
-											borderRadius: 16,
-											borderWidth: 1,
-											borderColor: Colors.border,
+											color: Colors.textSecondary,
+											fontSize: 11,
+											fontFamily: Fonts.medium,
+											letterSpacing: 0.8,
+											textTransform: "uppercase",
 										}}
 									>
-										<View
-											style={{
-												flexDirection: "row",
-												justifyContent: "space-between",
-												alignItems: "flex-start",
-												marginHorizontal: 16,
-												marginTop: 16,
-											}}
-										>
-											<View style={{ flex: 1 }}>
-												<Text
-													style={{
-														color: Colors.text,
-														fontSize: 16,
-														fontFamily: Fonts.semiBold,
-													}}
-												>
-													{debt.name}
-												</Text>
-												<Text
-													style={{
-														color: Colors.primary,
-														fontSize: 24,
-														fontFamily: Fonts.bold,
-														marginTop: 2,
-														letterSpacing: -0.5,
-													}}
-												>
-													{currencySymbol}
-													{debt.balance.toLocaleString("en-PH", {
-														minimumFractionDigits: 2,
-													})}
-												</Text>
-											</View>
-											<TouchableOpacity
-												onPress={() => handleDelete(debt.id!, debt.name)}
-												style={{
-													backgroundColor: Colors.card2,
-													padding: 8,
-													borderRadius: 10,
-												}}
-											>
-												<Ionicons
-													name="trash-outline"
-													size={18}
-													color={Colors.danger}
-												/>
-											</TouchableOpacity>
-										</View>
+										Active Debts ({debts.length})
+									</Text>
+									<Ionicons
+										name={showActive ? "chevron-up" : "chevron-down"}
+										size={16}
+										color={Colors.textSecondary}
+									/>
+								</TouchableOpacity>
 
+								{showActive &&
+									debts.map((debt) => (
 										<View
+											key={debt.id}
 											style={{
-												flexDirection: "row",
-												gap: 12,
-												marginTop: 10,
-												paddingTop: 10,
-												borderTopWidth: 1,
-												borderTopColor: Colors.border,
-												alignItems: "center",
+												backgroundColor: Colors.card,
+												borderRadius: 16,
+												borderWidth: 1,
+												borderColor: Colors.border,
 											}}
 										>
 											<View
 												style={{
 													flexDirection: "row",
-													alignItems: "center",
-													gap: 4,
+													justifyContent: "space-between",
+													alignItems: "flex-start",
 													marginHorizontal: 16,
+													marginTop: 16,
 												}}
 											>
-												<Ionicons
-													name="trending-up-outline"
-													size={14}
-													color={Colors.textSecondary}
-												/>
-												<Text
-													style={{
-														color: Colors.textSecondary,
-														fontSize: 13,
-														fontFamily: Fonts.regular,
-													}}
+												<View style={{ flex: 1 }}>
+													<Text
+														style={{
+															color: Colors.text,
+															fontSize: 16,
+															fontFamily: Fonts.semiBold,
+														}}
+													>
+														{debt.name}
+													</Text>
+													<Text
+														style={{
+															color: Colors.primary,
+															fontSize: 24,
+															fontFamily: Fonts.bold,
+															marginTop: 2,
+															letterSpacing: -0.5,
+														}}
+													>
+														{currencySymbol}
+														{debt.balance.toLocaleString("en-PH", {
+															minimumFractionDigits: 2,
+														})}
+													</Text>
+												</View>
+												<TouchableOpacity
+													onPress={() =>
+														handleDelete(debt.id!, debt.name)
+													}
 												>
-													{debt.interest_rate}%
-												</Text>
+													<Ionicons
+														name="trash-outline"
+														size={18}
+														color={Colors.danger}
+													/>
+												</TouchableOpacity>
 											</View>
+
 											<View
 												style={{
 													flexDirection: "row",
+													gap: 12,
+													marginTop: 10,
+													paddingTop: 10,
+													borderTopWidth: 1,
+													borderTopColor: Colors.border,
 													alignItems: "center",
-													gap: 4,
 												}}
 											>
-												<Ionicons
-													name="calendar-outline"
-													size={14}
-													color={Colors.textSecondary}
-												/>
-												<Text
+												<View
 													style={{
-														color: Colors.textSecondary,
-														fontSize: 13,
-														fontFamily: Fonts.regular,
+														flexDirection: "row",
+														alignItems: "center",
+														gap: 4,
+														marginHorizontal: 16,
 													}}
 												>
-													{currencySymbol}
-													{debt.min_payment}/month
-												</Text>
+													<Ionicons
+														name="trending-up-outline"
+														size={14}
+														color={Colors.textSecondary}
+													/>
+													<Text
+														style={{
+															color: Colors.textSecondary,
+															fontSize: 13,
+															fontFamily: Fonts.regular,
+														}}
+													>
+														{debt.interest_rate}%
+													</Text>
+												</View>
+												<View
+													style={{
+														flexDirection: "row",
+														alignItems: "center",
+														gap: 4,
+													}}
+												>
+													<Ionicons
+														name="calendar-outline"
+														size={14}
+														color={Colors.textSecondary}
+													/>
+													<Text
+														style={{
+															color: Colors.textSecondary,
+															fontSize: 13,
+															fontFamily: Fonts.regular,
+														}}
+													>
+														{currencySymbol}
+														{debt.min_payment} monthly
+													</Text>
+												</View>
+											</View>
+
+											<View
+												style={{
+													flexDirection: "row",
+													gap: 8,
+													marginTop: 10,
+													marginHorizontal: 16,
+													marginBottom: 16,
+												}}
+											>
+												<TouchableOpacity
+													onPress={() => handleLogPayment(debt)}
+													style={{
+														flex: 1,
+														flexDirection: "row",
+														alignItems: "center",
+														justifyContent: "center",
+														gap: 4,
+														backgroundColor: Colors.primary,
+														paddingHorizontal: 12,
+														paddingVertical: 10,
+														borderRadius: 10,
+													}}
+												>
+													<Ionicons
+														name="cash-outline"
+														size={14}
+														color="white"
+													/>
+													<Text
+														style={{
+															color: "white",
+															fontSize: 13,
+															fontFamily: Fonts.semiBold,
+														}}
+													>
+														Log Payment
+													</Text>
+												</TouchableOpacity>
+
+												<TouchableOpacity
+													onPress={() =>
+														handleMarkComplete(debt.id!, debt.name)
+													}
+													style={{
+														flexDirection: "row",
+														alignItems: "center",
+														justifyContent: "center",
+														gap: 4,
+														backgroundColor: Colors.success,
+														paddingHorizontal: 12,
+														paddingVertical: 12,
+														borderRadius: 10,
+													}}
+												>
+													<Ionicons
+														name="checkmark-circle-outline"
+														size={14}
+														color="white"
+													/>
+													<Text
+														style={{
+															color: "white",
+															fontSize: 13,
+															fontFamily: Fonts.semiBold,
+														}}
+													>
+														Complete
+													</Text>
+												</TouchableOpacity>
 											</View>
 										</View>
-
-										<View
-											style={{
-												flexDirection: "row",
-												gap: 8,
-												marginTop: 10,
-												marginHorizontal: 16,
-												marginBottom: 16,
-											}}
-										>
-											<TouchableOpacity
-												onPress={() => handleLogPayment(debt)}
-												style={{
-													flex: 1,
-													flexDirection: "row",
-													alignItems: "center",
-													justifyContent: "center",
-													gap: 4,
-													backgroundColor: Colors.primary,
-													paddingHorizontal: 12,
-													paddingVertical: 10,
-													borderRadius: 10,
-												}}
-											>
-												<Ionicons
-													name="cash-outline"
-													size={14}
-													color="white"
-												/>
-												<Text
-													style={{
-														color: "white",
-														fontSize: 13,
-														fontFamily: Fonts.semiBold,
-													}}
-												>
-													Log Payment
-												</Text>
-											</TouchableOpacity>
-
-											<TouchableOpacity
-												onPress={() =>
-													handleMarkComplete(debt.id!, debt.name)
-												}
-												style={{
-													flexDirection: "row",
-													alignItems: "center",
-													justifyContent: "center",
-													gap: 4,
-													backgroundColor: Colors.success + "15",
-													paddingHorizontal: 12,
-													paddingVertical: 10,
-													borderRadius: 10,
-													borderWidth: 1,
-													borderColor: Colors.success + "40",
-												}}
-											>
-												<Ionicons
-													name="checkmark-circle-outline"
-													size={14}
-													color={Colors.success}
-												/>
-												<Text
-													style={{
-														color: Colors.success,
-														fontSize: 13,
-														fontFamily: Fonts.semiBold,
-													}}
-												>
-													Complete
-												</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								))}
+									))}
 							</>
 						)}
 
@@ -645,7 +576,7 @@ export default function Debts() {
 											textTransform: "uppercase",
 										}}
 									>
-										Completed ({paidDebts.length}) ✓
+										Completed ({paidDebts.length})
 									</Text>
 									<Ionicons
 										name={showPaid ? "chevron-up" : "chevron-down"}
@@ -731,6 +662,46 @@ export default function Debts() {
 				)}
 			</ScrollView>
 
+			{/* Floating Action Button */}
+			<TouchableOpacity
+				style={{
+					position: "absolute",
+					bottom: 24,
+					right: 24,
+					height: 52,
+					borderRadius: 26,
+					backgroundColor: Colors.primary,
+					flexDirection: "row",
+					alignItems: "center",
+					paddingHorizontal: 20,
+					gap: 5,
+					elevation: 3,
+				}}
+				onPress={() => router.push("/add-debt")}
+				activeOpacity={0.85}
+			>
+				<Text
+					style={{
+						color: "white",
+						fontFamily: Fonts.bold,
+						fontSize: 20,
+						lineHeight: 22,
+					}}
+				>
+					+
+				</Text>
+				<Text
+					style={{
+						color: "white",
+						fontFamily: Fonts.semiBold,
+						fontSize: 13,
+						textTransform: "uppercase",
+					}}
+				>
+					Add Debt
+				</Text>
+			</TouchableOpacity>
+
 			{/* Log Payment Modal */}
 			<Modal
 				visible={showPaymentModal}
@@ -738,8 +709,7 @@ export default function Debts() {
 				animationType="slide"
 				onRequestClose={() => setShowPaymentModal(false)}
 			>
-				<KeyboardAvoidingView
-					behavior={Platform.OS === "ios" ? "padding" : "height"}
+				<View
 					style={{
 						flex: 1,
 						backgroundColor: "rgba(0,0,0,0.75)",
@@ -751,293 +721,323 @@ export default function Debts() {
 							backgroundColor: Colors.card,
 							borderTopLeftRadius: 28,
 							borderTopRightRadius: 28,
-							padding: 24,
-							gap: 16,
 						}}
 					>
-						{/* Modal Header */}
 						<View
 							style={{
-								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "center",
+								paddingTop: 24,
+								paddingHorizontal: 24,
+								paddingBottom: 32,
+								gap: 16,
 							}}
 						>
-							<View>
-								<Text
-									style={{
-										color: Colors.text,
-										fontSize: 18,
-										fontFamily: Fonts.bold,
-									}}
-								>
-									Log Payment
-								</Text>
-								<Text
-									style={{
-										color: Colors.textSecondary,
-										fontSize: 13,
-										fontFamily: Fonts.regular,
-										marginTop: 2,
-									}}
-								>
-									{selectedDebt?.name}
-								</Text>
-							</View>
-							<TouchableOpacity onPress={() => setShowPaymentModal(false)}>
-								<Ionicons name="close-circle" size={24} color={Colors.textLight} />
-							</TouchableOpacity>
-						</View>
-
-						{/* Min / Max info row */}
-						<View
-							style={{
-								flexDirection: "row",
-								gap: 8,
-							}}
-						>
+							{/* Modal Header */}
 							<View
 								style={{
-									flex: 1,
-									backgroundColor: Colors.card2,
-									borderRadius: 12,
-									padding: 12,
+									flexDirection: "row",
+									justifyContent: "space-between",
 									alignItems: "center",
-									borderWidth: 1,
-									borderColor: Colors.border,
 								}}
 							>
-								<Text
-									style={{
-										color: Colors.textSecondary,
-										fontSize: 10,
-										fontFamily: Fonts.medium,
-										textTransform: "uppercase",
-										letterSpacing: 0.8,
-									}}
-								>
-									Min Payment
-								</Text>
-								<Text
-									style={{
-										color: Colors.text,
-										fontSize: 14,
-										fontFamily: Fonts.bold,
-										marginTop: 4,
-									}}
-								>
-									{currencySymbol}
-									{selectedDebt?.min_payment.toLocaleString("en-PH", {
-										minimumFractionDigits: 2,
-									})}
-								</Text>
+								<View>
+									<Text
+										style={{
+											color: Colors.text,
+											fontSize: 18,
+											fontFamily: Fonts.bold,
+										}}
+									>
+										Log Payment
+									</Text>
+									<Text
+										style={{
+											color: Colors.textSecondary,
+											fontSize: 13,
+											fontFamily: Fonts.regular,
+											marginTop: 2,
+										}}
+									>
+										{selectedDebt?.name}
+									</Text>
+								</View>
 							</View>
-							<View
-								style={{
-									flex: 1,
-									backgroundColor: Colors.card2,
-									borderRadius: 12,
-									padding: 12,
-									alignItems: "center",
-									borderWidth: 1,
-									borderColor: Colors.border,
-								}}
-							>
-								<Text
-									style={{
-										color: Colors.textSecondary,
-										fontSize: 10,
-										fontFamily: Fonts.medium,
-										textTransform: "uppercase",
-										letterSpacing: 0.8,
-									}}
-								>
-									Max (Balance)
-								</Text>
-								<Text
-									style={{
-										color: Colors.primary,
-										fontSize: 14,
-										fontFamily: Fonts.bold,
-										marginTop: 4,
-									}}
-								>
-									{currencySymbol}
-									{selectedDebt?.balance.toLocaleString("en-PH", {
-										minimumFractionDigits: 2,
-									})}
-								</Text>
-							</View>
-						</View>
 
-						{/* Payment Amount Input */}
-						<View>
-							<Text
-								style={{
-									color: Colors.textSecondary,
-									fontSize: 11,
-									fontFamily: Fonts.medium,
-									letterSpacing: 0.8,
-									textTransform: "uppercase",
-									marginBottom: 8,
-								}}
-							>
-								Payment Amount ({currencySymbol})
-							</Text>
-							<TextInput
-								value={paymentDisplay}
-								onChangeText={handleAmountChange}
-								placeholder="0.00"
-								placeholderTextColor={Colors.textLight}
-								keyboardType="decimal-pad"
-								autoFocus
+							{/* Min / Max info row */}
+							<View style={{ flexDirection: "row", gap: 8 }}>
+								<View
+									style={{
+										flex: 1,
+										backgroundColor: Colors.card2,
+										borderRadius: 12,
+										padding: 12,
+										alignItems: "center",
+										borderWidth: 1,
+										borderColor: Colors.border,
+									}}
+								>
+									<Text
+										style={{
+											color: Colors.textSecondary,
+											fontSize: 10,
+											fontFamily: Fonts.medium,
+											textTransform: "uppercase",
+											letterSpacing: 0.8,
+										}}
+									>
+										Min Payment
+									</Text>
+									<Text
+										style={{
+											color: Colors.text,
+											fontSize: 14,
+											fontFamily: Fonts.bold,
+											marginTop: 4,
+										}}
+									>
+										{currencySymbol}
+										{selectedDebt?.min_payment.toLocaleString("en-PH", {
+											minimumFractionDigits: 2,
+										})}
+									</Text>
+								</View>
+								<View
+									style={{
+										flex: 1,
+										backgroundColor: Colors.card2,
+										borderRadius: 12,
+										padding: 12,
+										alignItems: "center",
+										borderWidth: 1,
+										borderColor: Colors.border,
+									}}
+								>
+									<Text
+										style={{
+											color: Colors.textSecondary,
+											fontSize: 10,
+											fontFamily: Fonts.medium,
+											textTransform: "uppercase",
+											letterSpacing: 0.8,
+										}}
+									>
+										Max (Balance)
+									</Text>
+									<Text
+										style={{
+											color: Colors.primary,
+											fontSize: 14,
+											fontFamily: Fonts.bold,
+											marginTop: 4,
+										}}
+									>
+										{currencySymbol}
+										{selectedDebt?.balance.toLocaleString("en-PH", {
+											minimumFractionDigits: 2,
+										})}
+									</Text>
+								</View>
+							</View>
+
+							{/* Selected Amount Display */}
+							<View
 								style={{
 									backgroundColor: Colors.card2,
 									padding: 16,
 									borderRadius: 14,
-									color: paymentError ? Colors.danger : Colors.text,
 									borderWidth: 1.5,
 									borderColor: paymentError
 										? Colors.danger
 										: paymentAmount && isValidAmount
 											? Colors.success
-											: paymentAmount
-												? Colors.border
-												: Colors.border,
-									fontSize: 24,
-									fontFamily: Fonts.bold,
-									textAlign: "center",
+											: Colors.border,
+									alignItems: "center",
+									justifyContent: "center",
 								}}
-							/>
-							{/* Inline error message */}
+							>
+								<Text
+									style={{
+										color: paymentError ? Colors.danger : Colors.text,
+										fontSize: 24,
+										fontFamily: Fonts.bold,
+										textAlign: "center",
+									}}
+								>
+									{paymentAmount
+										? `${currencySymbol}${parseFloat(paymentAmount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`
+										: "—"}
+								</Text>
+							</View>
 							{paymentError ? (
 								<Text
 									style={{
 										color: Colors.danger,
 										fontSize: 12,
 										fontFamily: Fonts.medium,
-										marginTop: 6,
+										marginTop: -8,
 										textAlign: "center",
 									}}
 								>
 									{paymentError}
 								</Text>
 							) : null}
-						</View>
 
-						{/* Quick Amount Buttons */}
-						<View style={{ flexDirection: "row", gap: 8 }}>
-							{[
-								selectedDebt?.min_payment || 0,
-								(selectedDebt?.min_payment || 0) * 1.5,
-								(selectedDebt?.min_payment || 0) * 2,
-							].map((amount, index) => {
-								// Cap quick-select buttons at the balance
-								const capped = Math.min(amount, selectedDebt?.balance || amount);
-								return (
-									<TouchableOpacity
-										key={index}
-										onPress={() => handleAmountChange(capped.toFixed(2))}
+							{/* Quick Amount Buttons */}
+							<View style={{ flexDirection: "row", gap: 8 }}>
+								{[
+									selectedDebt?.min_payment || 0,
+									(selectedDebt?.min_payment || 0) * 1.5,
+									(selectedDebt?.min_payment || 0) * 2,
+								].map((amount, index) => {
+									const capped = Math.min(
+										amount,
+										selectedDebt?.balance || amount,
+									);
+									const isSelected = paymentAmount === capped.toFixed(2);
+									return (
+										<TouchableOpacity
+											key={index}
+											onPress={() => handleAmountChange(capped.toFixed(2))}
+											style={{
+												flex: 1,
+												padding: 10,
+												backgroundColor: isSelected
+													? Colors.primary + "20"
+													: Colors.card2,
+												borderRadius: 10,
+												alignItems: "center",
+												borderWidth: 1,
+												borderColor: isSelected
+													? Colors.primary
+													: Colors.border,
+											}}
+										>
+											<Text
+												style={{
+													color: isSelected
+														? Colors.primary
+														: Colors.textSecondary,
+													fontSize: 10,
+													fontFamily: Fonts.medium,
+													textTransform: "uppercase",
+												}}
+											>
+												{index === 0 ? "Min" : index === 1 ? "1.5x" : "2x"}
+											</Text>
+											<Text
+												style={{
+													color: isSelected
+														? Colors.primary
+														: Colors.text,
+													fontSize: 13,
+													fontFamily: Fonts.bold,
+													marginTop: 2,
+												}}
+											>
+												{currencySymbol}
+												{capped.toFixed(2)}
+											</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+
+							{/* New Balance Preview */}
+							{paymentAmount && !isNaN(parsedAmount) && isValidAmount && (
+								<View
+									style={{
+										backgroundColor: Colors.success + "15",
+										borderRadius: 12,
+										padding: 14,
+										flexDirection: "row",
+										justifyContent: "space-between",
+										alignItems: "center",
+										borderWidth: 1,
+										borderColor: Colors.success + "40",
+									}}
+								>
+									<Text
 										style={{
-											flex: 1,
-											padding: 10,
-											backgroundColor: Colors.card2,
-											borderRadius: 10,
-											alignItems: "center",
-											borderWidth: 1,
-											borderColor: Colors.border,
+											color: Colors.textSecondary,
+											fontSize: 13,
+											fontFamily: Fonts.medium,
 										}}
 									>
-										<Text
-											style={{
-												color: Colors.textSecondary,
-												fontSize: 10,
-												fontFamily: Fonts.medium,
-												textTransform: "uppercase",
-											}}
-										>
-											{index === 0 ? "Min" : index === 1 ? "1.5x" : "2x"}
-										</Text>
-										<Text
-											style={{
-												color: Colors.text,
-												fontSize: 13,
-												fontFamily: Fonts.bold,
-												marginTop: 2,
-											}}
-										>
-											{currencySymbol}
-											{capped.toFixed(2)}
-										</Text>
-									</TouchableOpacity>
-								);
-							})}
-						</View>
+										New Balance
+									</Text>
+									<Text
+										style={{
+											color: Colors.success,
+											fontSize: 18,
+											fontFamily: Fonts.bold,
+										}}
+									>
+										{currencySymbol}
+										{Math.max(
+											0,
+											(selectedDebt?.balance || 0) - parsedAmount,
+										).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+									</Text>
+								</View>
+							)}
 
-						{/* New Balance Preview */}
-						{paymentAmount && !isNaN(parsedAmount) && isValidAmount && (
-							<View
-								style={{
-									backgroundColor: Colors.success + "15",
-									borderRadius: 12,
-									padding: 14,
-									flexDirection: "row",
-									justifyContent: "space-between",
-									alignItems: "center",
-									borderWidth: 1,
-									borderColor: Colors.success + "40",
-								}}
-							>
-								<Text
+							{/* Cancel + Confirm Buttons */}
+							<View style={{ flexDirection: "row", gap: 10 }}>
+								<TouchableOpacity
+									onPress={() => {
+										setShowPaymentModal(false);
+										setPaymentAmount("");
+										setPaymentError("");
+									}}
 									style={{
-										color: Colors.textSecondary,
-										fontSize: 13,
-										fontFamily: Fonts.medium,
+										flex: 1,
+										padding: 18,
+										borderRadius: 16,
+										alignItems: "center",
+										backgroundColor: Colors.card2,
+										borderWidth: 1,
+										borderColor: Colors.border,
 									}}
 								>
-									New Balance
-								</Text>
-								<Text
+									<Text
+										style={{
+											color: Colors.textSecondary,
+											fontSize: 16,
+											fontFamily: Fonts.semiBold,
+										}}
+									>
+										Cancel
+									</Text>
+								</TouchableOpacity>
+
+								<TouchableOpacity
+									onPress={handleSavePayment}
+									disabled={!isValidAmount}
 									style={{
-										color: Colors.success,
-										fontSize: 18,
-										fontFamily: Fonts.bold,
+										flex: 1,
+										backgroundColor: isValidAmount
+											? Colors.primary
+											: Colors.border,
+										padding: 18,
+										borderRadius: 16,
+										alignItems: "center",
+										opacity: isValidAmount ? 1 : 0.5,
 									}}
 								>
-									{currencySymbol}
-									{Math.max(
-										0,
-										(selectedDebt?.balance || 0) - parsedAmount,
-									).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-								</Text>
+									<Text
+										style={{
+											color: "white",
+											fontSize: 16,
+											fontFamily: Fonts.semiBold,
+										}}
+									>
+										Confirm Payment
+									</Text>
+								</TouchableOpacity>
 							</View>
-						)}
-
-						{/* Confirm Button — disabled when invalid */}
-						<TouchableOpacity
-							onPress={handleSavePayment}
-							disabled={!isValidAmount}
-							style={{
-								backgroundColor: isValidAmount ? Colors.primary : Colors.border,
-								padding: 18,
-								borderRadius: 16,
-								alignItems: "center",
-								opacity: isValidAmount ? 1 : 0.5,
-							}}
-						>
-							<Text
-								style={{
-									color: "white",
-									fontSize: 16,
-									fontFamily: Fonts.semiBold,
-								}}
-							>
-								Confirm Payment
-							</Text>
-						</TouchableOpacity>
+						</View>
 					</View>
-				</KeyboardAvoidingView>
+				</View>
 			</Modal>
-		</>
+		</View>
 	);
 }

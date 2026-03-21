@@ -88,13 +88,14 @@ export default function AddDebt() {
 		<KeyboardAvoidingView
 			style={{ flex: 1, backgroundColor: Colors.background }}
 			behavior={Platform.OS === "ios" ? "padding" : "height"}
-			keyboardVerticalOffset={90}
+			keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
 		>
 			<ScrollView
 				contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
 				showsVerticalScrollIndicator={false}
 				keyboardShouldPersistTaps="handled"
 				keyboardDismissMode="on-drag"
+				automaticallyAdjustKeyboardInsets={true}
 			>
 				{/* Step 1 — Pick Category */}
 				<View>

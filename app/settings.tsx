@@ -1,4 +1,14 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from "react-native";
+import {
+	View,
+	Text,
+	ScrollView,
+	TouchableOpacity,
+	Alert,
+	TextInput,
+	Modal,
+	KeyboardAvoidingView,
+	Platform,
+} from "react-native";
 import { getSettings, saveSettings, currencies, AppSettings } from "../lib/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAllDebts, clearAllDebts } from "../lib/database";
@@ -201,7 +211,6 @@ export default function Settings() {
 					Preferences
 				</Text>
 
-				{/* ✅ FIXED: just opens the modal */}
 				<SettingRow
 					icon="cash-outline"
 					label="Currency"
@@ -393,80 +402,98 @@ export default function Settings() {
 						justifyContent: "flex-end",
 					}}
 				>
-					<View
+					<KeyboardAvoidingView
+						behavior={Platform.OS === "ios" ? "padding" : "height"}
 						style={{
 							backgroundColor: Colors.card,
 							borderTopLeftRadius: 24,
 							borderTopRightRadius: 24,
-							padding: 24,
-							gap: 16,
 						}}
 					>
-						<Text
+						<View
 							style={{
-								color: Colors.text,
-								fontSize: 18,
-								fontFamily: Fonts.bold,
-							}}
-						>
-							Your Name
-						</Text>
-
-						<TextInput
-							value={tempName}
-							onChangeText={setTempName}
-							placeholder="Enter your name"
-							placeholderTextColor={Colors.textLight}
-							style={{
-								backgroundColor: Colors.card2,
-								padding: 16,
-								borderRadius: 14,
-								color: Colors.text,
-								borderWidth: 1,
-								borderColor: Colors.border,
-								fontSize: 16,
-								fontFamily: Fonts.regular,
-							}}
-						/>
-
-						<TouchableOpacity
-							onPress={() => {
-								updateSetting("userName", tempName.trim());
-								setShowNameModal(false);
-							}}
-							style={{
-								backgroundColor: Colors.primary,
-								padding: 16,
-								borderRadius: 14,
-								alignItems: "center",
+								padding: 24,
+								gap: 16,
 							}}
 						>
 							<Text
 								style={{
-									color: "white",
+									color: Colors.text,
+									fontSize: 18,
+									fontFamily: Fonts.bold,
+								}}
+							>
+								Your Name
+							</Text>
+
+							<TextInput
+								value={tempName}
+								onChangeText={setTempName}
+								placeholder="Enter your name"
+								placeholderTextColor={Colors.textLight}
+								autoFocus
+								style={{
+									backgroundColor: Colors.card2,
+									padding: 16,
+									borderRadius: 14,
+									color: Colors.text,
+									borderWidth: 1,
+									borderColor: Colors.border,
 									fontSize: 16,
-									fontFamily: Fonts.semiBold,
+									fontFamily: Fonts.regular,
 								}}
-							>
-								Save
-							</Text>
-						</TouchableOpacity>
+							/>
 
-						<TouchableOpacity
-							onPress={() => setShowNameModal(false)}
-							style={{ alignItems: "center", padding: 8 }}
-						>
-							<Text
-								style={{
-									color: Colors.textSecondary,
-									fontFamily: Fonts.medium,
-									fontSize: 15,
-								}}
-							>
-								Cancel
-							</Text>
-						</TouchableOpacity>
-					</View>
+							<View style={{ flexDirection: "row", gap: 10 }}>
+								<TouchableOpacity
+									onPress={() => setShowNameModal(false)}
+									style={{
+										flex: 1,
+										backgroundColor: Colors.card2,
+										padding: 16,
+										borderRadius: 14,
+										alignItems: "center",
+										borderWidth: 1,
+										borderColor: Colors.border,
+									}}
+								>
+									<Text
+										style={{
+											color: Colors.textSecondary,
+											fontSize: 16,
+											fontFamily: Fonts.medium,
+										}}
+									>
+										Cancel
+									</Text>
+								</TouchableOpacity>
+
+								<TouchableOpacity
+									onPress={() => {
+										updateSetting("userName", tempName.trim());
+										setShowNameModal(false);
+									}}
+									style={{
+										flex: 1,
+										backgroundColor: Colors.primary,
+										padding: 16,
+										borderRadius: 14,
+										alignItems: "center",
+									}}
+								>
+									<Text
+										style={{
+											color: "white",
+											fontSize: 16,
+											fontFamily: Fonts.semiBold,
+										}}
+									>
+										Save
+									</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</KeyboardAvoidingView>
 				</View>
 			</Modal>
 		</>

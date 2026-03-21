@@ -174,7 +174,10 @@ export default function Plan() {
 							}}
 						>
 							{currencySymbol}
-							{totalInterest.toFixed(0)}
+							{totalInterest.toLocaleString("en-PH", {
+								minimumFractionDigits: 0,
+								maximumFractionDigits: 0,
+							})}
 						</Text>
 					</View>
 				</View>
