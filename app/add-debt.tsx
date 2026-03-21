@@ -25,6 +25,13 @@ const DEBT_CATEGORIES = [
 	{ label: "Other", icon: "ellipsis-horizontal-outline" },
 ];
 
+// ─── Limits ───────────────────────────────────────────────────────────────────
+const MAX_BALANCE = 99_999_999.99; // ₱99,999,999.99
+const MAX_INTEREST = 100; // 100%
+const MAX_MIN_PAYMENT = 99_999_999.99; // same ceiling as balance
+const MAX_DECIMAL_PLACES = 2;
+// ──────────────────────────────────────────────────────────────────────────────
+
 export default function AddDebt() {
 	const [name, setName] = useState("");
 	const [balance, setBalance] = useState("");
@@ -46,6 +53,42 @@ export default function AddDebt() {
 
 	const unformatNumber = (value: string): string => value.replace(/,/g, "");
 
+	/**
+	 * Sanitizes a decimal input string:
+	 * - Strips non-numeric chars (except one dot)
+	 * - Caps decimal places to MAX_DECIMAL_PLACES
+	 * - BLOCKS input (returns previous value) if it would exceed maxValue
+	 */
+	const sanitizeDecimal = (text: string, prevRaw: string, maxValue?: number): string => {
+		// Allow only digits and one decimal point
+		let cleaned = text.replace(/[^0-9.]/g, "");
+
+		// Only one decimal point allowed
+		const dotIndex = cleaned.indexOf(".");
+		if (dotIndex !== -1) {
+			cleaned =
+				cleaned.slice(0, dotIndex + 1) + cleaned.slice(dotIndex + 1).replace(/\./g, "");
+		}
+
+		// Limit decimal places — block extra digits silently
+		if (dotIndex !== -1) {
+			const decimals = cleaned.slice(dotIndex + 1);
+			if (decimals.length > MAX_DECIMAL_PLACES) {
+				return prevRaw; // block — don't accept the new character
+			}
+		}
+
+		// Block if value exceeds maxValue — return previous value unchanged
+		if (maxValue !== undefined && cleaned !== "" && cleaned !== ".") {
+			const num = parseFloat(cleaned);
+			if (!isNaN(num) && num > maxValue) {
+				return prevRaw; // block — don't accept the new character
+			}
+		}
+
+		return cleaned;
+	};
+
 	const handleCategorySelect = (label: string) => {
 		setSelectedCategory(label);
 		if (label === "Other") {
@@ -55,6 +98,23 @@ export default function AddDebt() {
 			setShowCustom(false);
 			setName(label);
 		}
+	};
+
+	const handleBalanceChange = (text: string) => {
+		const raw = sanitizeDecimal(unformatNumber(text), balance, MAX_BALANCE);
+		setBalance(raw);
+		setBalanceDisplay(formatNumber(raw));
+	};
+
+	const handleInterestChange = (text: string) => {
+		const raw = sanitizeDecimal(text, interest, MAX_INTEREST);
+		setInterest(raw);
+	};
+
+	const handleMinPaymentChange = (text: string) => {
+		const raw = sanitizeDecimal(unformatNumber(text), minPayment, MAX_MIN_PAYMENT);
+		setMinPayment(raw);
+		setMinPaymentDisplay(formatNumber(raw));
 	};
 
 	const handleSave = () => {
@@ -69,6 +129,30 @@ export default function AddDebt() {
 
 		if (isNaN(balanceNum) || isNaN(interestNum) || isNaN(minPaymentNum)) {
 			Alert.alert("Invalid Input", "Please enter valid numbers.");
+			return;
+		}
+
+		// Extra guard: min payment shouldn't exceed balance
+		if (minPaymentNum > balanceNum) {
+			Alert.alert(
+				"Invalid Payment",
+				"Minimum monthly payment cannot exceed the current balance.",
+			);
+			return;
+		}
+
+		if (interestNum <= 0) {
+			Alert.alert("Invalid Interest", "Interest rate must be greater than 0%.");
+			return;
+		}
+
+		// Guard: min payment must be greater than monthly interest accrued
+		const monthlyInterest = (balanceNum * interestNum) / 100 / 12;
+		if (minPaymentNum <= monthlyInterest) {
+			Alert.alert(
+				"Payment Too Low",
+				`Your minimum payment (₱${minPaymentNum.toFixed(2)}) is less than or equal to the monthly interest (₱${monthlyInterest.toFixed(2)}). Your debt will never decrease.\n\nPlease enter a payment greater than ₱${monthlyInterest.toFixed(2)}.`,
+			);
 			return;
 		}
 
@@ -118,7 +202,7 @@ export default function AddDebt() {
 								key={cat.label}
 								onPress={() => handleCategorySelect(cat.label)}
 								style={{
-									width: "48.5%", // 2 columns with gap
+									width: "48.5%",
 									flexDirection: "row",
 									alignItems: "center",
 									gap: 6,
@@ -186,6 +270,7 @@ export default function AddDebt() {
 							placeholder="e.g. Sari-sari store loan"
 							placeholderTextColor={Colors.textLight}
 							autoFocus
+							maxLength={50}
 							style={{
 								backgroundColor: Colors.card,
 								padding: 16,
@@ -219,14 +304,11 @@ export default function AddDebt() {
 							</Text>
 							<TextInput
 								value={balanceDisplay}
-								onChangeText={(text) => {
-									const raw = unformatNumber(text);
-									setBalance(raw);
-									setBalanceDisplay(formatNumber(raw));
-								}}
+								onChangeText={handleBalanceChange}
 								placeholder="0.00"
 								placeholderTextColor={Colors.textLight}
 								keyboardType="decimal-pad"
+								maxLength={15} // "99,999,999.99" = 14 chars + buffer
 								style={{
 									backgroundColor: Colors.card,
 									padding: 14,
@@ -256,10 +338,11 @@ export default function AddDebt() {
 							</Text>
 							<TextInput
 								value={interest}
-								onChangeText={setInterest}
+								onChangeText={handleInterestChange}
 								placeholder="0.00"
 								placeholderTextColor={Colors.textLight}
 								keyboardType="decimal-pad"
+								maxLength={6} // "100.00"
 								style={{
 									backgroundColor: Colors.card,
 									padding: 14,
@@ -271,6 +354,9 @@ export default function AddDebt() {
 									fontFamily: Fonts.regular,
 								}}
 							/>
+							<Text style={{ color: Colors.textLight, fontSize: 11, marginTop: 4 }}>
+								Max: 100%
+							</Text>
 						</View>
 
 						{/* Min Payment */}
@@ -289,14 +375,11 @@ export default function AddDebt() {
 							</Text>
 							<TextInput
 								value={minPaymentDisplay}
-								onChangeText={(text) => {
-									const raw = unformatNumber(text);
-									setMinPayment(raw);
-									setMinPaymentDisplay(formatNumber(raw));
-								}}
+								onChangeText={handleMinPaymentChange}
 								placeholder="0.00"
 								placeholderTextColor={Colors.textLight}
 								keyboardType="decimal-pad"
+								maxLength={15}
 								style={{
 									backgroundColor: Colors.card,
 									padding: 14,
