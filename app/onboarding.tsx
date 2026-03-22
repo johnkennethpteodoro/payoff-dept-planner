@@ -21,7 +21,7 @@ const slides = [
 	},
 	{
 		icon: "analytics-outline",
-		title: "Get a Payoff Plan",
+		title: "Get a Climb Plan",
 		subtitle: "We calculate the fastest way to become debt free using proven strategies.",
 	},
 	{

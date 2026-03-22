@@ -1,6 +1,6 @@
 import * as SQLite from "expo-sqlite";
 
-const db = SQLite.openDatabaseSync("payoff.db");
+const db = SQLite.openDatabaseSync("climb.db");
 
 export interface Debt {
 	id?: number;

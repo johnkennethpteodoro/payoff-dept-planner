@@ -24,7 +24,7 @@ export default function Coach() {
 		{
 			role: "assistant",
 			content:
-				"Hi! I'm your AI Debt Coach 💪 I can help you create a personalized payoff plan, answer questions about your debts, and keep you motivated.\n\nI work both online and offline! What would you like to know?",
+				"Hi! I'm your AI Debt Coach 💪 I can help you create a personalized climb plan, answer questions about your debts, and keep you motivated.\n\nI work both online and offline! What would you like to know?",
 		},
 	]);
 	const [input, setInput] = useState("");

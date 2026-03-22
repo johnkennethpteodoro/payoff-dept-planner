@@ -7,12 +7,12 @@ import { useCallback, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 
-interface PayoffDebt extends Debt {
-	monthsToPayoff: number;
+interface ClimbDebt extends Debt {
+	monthsToClimb: number;
 	totalInterestPaid: number;
 }
 
-function calculatePayoff(debt: Debt): PayoffDebt {
+function calculateClimb(debt: Debt): ClimbDebt {
 	const monthlyRate = debt.interest_rate / 100 / 12;
 	let balance = debt.balance;
 	let months = 0;
@@ -24,7 +24,7 @@ function calculatePayoff(debt: Debt): PayoffDebt {
 		if (balance < 0) balance = 0;
 		months++;
 	}
-	return { ...debt, monthsToPayoff: months, totalInterestPaid: totalInterest };
+	return { ...debt, monthsToClimb: months, totalInterestPaid: totalInterest };
 }
 
 function getDebtFreeDate(months: number): string {
@@ -35,7 +35,7 @@ function getDebtFreeDate(months: number): string {
 }
 
 export default function Plan() {
-	const [debts, setDebts] = useState<PayoffDebt[]>([]);
+	const [debts, setDebts] = useState<ClimbDebt[]>([]);
 	const [strategy, setStrategy] = useState<"snowball" | "avalanche">("snowball");
 	const [currencySymbol, setCurrencySymbol] = useState("₱");
 
@@ -50,7 +50,7 @@ export default function Plan() {
 	);
 
 	const applyStrategy = (data: Debt[], currentStrategy: string) => {
-		const calculated = data.map(calculatePayoff);
+		const calculated = data.map(calculateClimb);
 		if (currentStrategy === "snowball") {
 			calculated.sort((a, b) => a.balance - b.balance);
 		} else {
@@ -67,7 +67,7 @@ export default function Plan() {
 
 	const totalInterest = debts.reduce((sum, d) => sum + d.totalInterestPaid, 0);
 	const totalMonthlyPayment = debts.reduce((sum, d) => sum + d.min_payment, 0);
-	const maxMonths = debts.length > 0 ? Math.max(...debts.map((d) => d.monthsToPayoff)) : 0;
+	const maxMonths = debts.length > 0 ? Math.max(...debts.map((d) => d.monthsToClimb)) : 0;
 
 	return (
 		<ScrollView
@@ -268,7 +268,7 @@ export default function Plan() {
 					: "🏔️ Paying highest interest first saves more money"}
 			</Text>
 
-			{/* Payoff Order */}
+			{/* Climb Order */}
 			{debts.length === 0 ? (
 				<View
 					style={{
@@ -312,7 +312,7 @@ export default function Plan() {
 							lineHeight: 22,
 						}}
 					>
-						Add debts to see your{"\n"}personalized payoff plan!
+						Add debts to see your{"\n"}personalized climb plan!
 					</Text>
 				</View>
 			) : (
@@ -326,7 +326,7 @@ export default function Plan() {
 							textTransform: "uppercase",
 						}}
 					>
-						Payoff Order
+						Climb Order
 					</Text>
 
 					{debts.map((debt, index) => (
@@ -389,7 +389,7 @@ export default function Plan() {
 												fontFamily: Fonts.bold,
 											}}
 										>
-											{debt.monthsToPayoff} mo.
+											{debt.monthsToClimb} mo.
 										</Text>
 									</View>
 
@@ -422,7 +422,7 @@ export default function Plan() {
 										>
 											{index === 0
 												? "🎯 Pay this first"
-												: getDebtFreeDate(debt.monthsToPayoff)}
+												: getDebtFreeDate(debt.monthsToClimb)}
 										</Text>
 									</View>
 								</View>

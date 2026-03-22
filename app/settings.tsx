@@ -162,7 +162,7 @@ export default function Settings() {
 							fontFamily: Fonts.bold,
 						}}
 					>
-						{settings.userName ? `Hi, ${settings.userName}! 👋` : "Payoff"}
+						{settings.userName ? `Hi, ${settings.userName}! 👋` : "Climb"}
 					</Text>
 					<Text
 						style={{

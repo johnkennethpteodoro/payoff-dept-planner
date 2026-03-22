@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
 			{[
 				{
 					title: "Overview",
-					body: "Payoff — Debt Planner is committed to protecting your privacy. This Privacy Policy explains how we handle your information.",
+					body: "Climb — Debt Planner is committed to protecting your privacy. This Privacy Policy explains how we handle your information.",
 				},
 				{
 					title: "Data Collection",

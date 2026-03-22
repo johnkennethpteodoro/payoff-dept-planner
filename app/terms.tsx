@@ -32,11 +32,11 @@ export default function Terms() {
 			{[
 				{
 					title: "Acceptance",
-					body: "By downloading and using Payoff — Debt Planner, you agree to these Terms of Use.",
+					body: "By downloading and using Climb — Debt Planner, you agree to these Terms of Use.",
 				},
 				{
 					title: "Description",
-					body: "Payoff is a personal debt tracking and planning app designed to help users manage and pay off their debts.",
+					body: "Climb is a personal debt tracking and planning app designed to help users manage and pay off their debts.",
 				},
 				{
 					title: "Disclaimer",

@@ -28,7 +28,7 @@ export default function Progress() {
 			done: debts.length > 0 || paidDebts.length > 0,
 		},
 		{
-			label: "Created payoff plan",
+			label: "Created climb plan",
 			icon: "analytics-outline",
 			done: debts.length > 0 || paidDebts.length > 0,
 		},

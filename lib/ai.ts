@@ -32,25 +32,25 @@ function generateOfflineResponse(message: string, debts: Debt[], settings: AppSe
 		msg.includes("john") ||
 		msg.includes("kenneth")
 	) {
-		return `Payoff was developed by **John Kenneth Teodoro** 👨‍💻\n\nHe built this app to help Filipinos take control of their debt and achieve financial freedom. If you have feedback or suggestions, feel free to reach out!\n\nNow, how can I help you with your debt journey? 💪`;
+		return `Climb was developed by **John Kenneth Teodoro** 👨‍💻\n\nHe built this app to help Filipinos take control of their debt and achieve financial freedom. If you have feedback or suggestions, feel free to reach out!\n\nNow, how can I help you with your debt journey? 💪`;
 	}
 
 	// ── What is this app ────────────────────────────
 	if (
 		msg.includes("what is this app") ||
 		msg.includes("what does this app") ||
-		msg.includes("what is payoff") ||
+		msg.includes("what is climb") ||
 		msg.includes("about this app") ||
 		msg.includes("how does this work") ||
 		msg.includes("what can you do") ||
 		msg.includes("what can this app")
 	) {
-		return `Payoff is a personal debt planner app that helps you:\n\n📊 Track all your debts in one place\n📅 Create a personalized payoff plan\n💡 Choose between Snowball & Avalanche strategies\n🤖 Get AI coaching (that's me!)\n🏆 Track your progress & milestones\n\nEverything works 100% offline — your data never leaves your device! 🔒`;
+		return `Climb is a personal debt planner app that helps you:\n\n📊 Track all your debts in one place\n📅 Create a personalized climb plan\n💡 Choose between Snowball & Avalanche strategies\n🤖 Get AI coaching (that's me!)\n🏆 Track your progress & milestones\n\nEverything works 100% offline — your data never leaves your device! 🔒`;
 	}
 
 	// ── No debts yet ────────────────────────────────
 	if (debts.length === 0) {
-		return `You haven't added any debts yet! 📝\n\nHere's how to get started:\n1️⃣ Tap the "My Debts" tab\n2️⃣ Tap "Add New Debt"\n3️⃣ Choose your debt type\n4️⃣ Enter your balance, interest rate and minimum payment\n\nOnce you add your debts, I can give you a personalized payoff plan! 💪`;
+		return `You haven't added any debts yet! 📝\n\nHere's how to get started:\n1️⃣ Tap the "My Debts" tab\n2️⃣ Tap "Add New Debt"\n3️⃣ Choose your debt type\n4️⃣ Enter your balance, interest rate and minimum payment\n\nOnce you add your debts, I can give you a personalized climb plan! 💪`;
 	}
 
 	// ── Greetings ────────────────────────────────────
@@ -227,7 +227,7 @@ function generateOfflineResponse(message: string, debts: Debt[], settings: AppSe
 		msg.includes("schedule")
 	) {
 		const sortedByBalance = [...debts].sort((a, b) => a.balance - b.balance);
-		return `Here's your personalized Snowball payoff plan:\n\n${sortedByBalance.map((d, i) => `${i + 1}. ${d.name}\n   ${symbol}${d.balance.toLocaleString()} at ${d.interest_rate}%\n   Min: ${symbol}${d.min_payment}/mo`).join("\n\n")}\n\nTotal: ${symbol}${totalDebt.toLocaleString()}\nMonthly minimum: ${symbol}${totalMonthly.toLocaleString()}\nEstimated time: ${monthsToFreedom} months\n\nFocus on one debt at a time! 🎯`;
+		return `Here's your personalized Snowball climb plan:\n\n${sortedByBalance.map((d, i) => `${i + 1}. ${d.name}\n   ${symbol}${d.balance.toLocaleString()} at ${d.interest_rate}%\n   Min: ${symbol}${d.min_payment}/mo`).join("\n\n")}\n\nTotal: ${symbol}${totalDebt.toLocaleString()}\nMonthly minimum: ${symbol}${totalMonthly.toLocaleString()}\nEstimated time: ${monthsToFreedom} months\n\nFocus on one debt at a time! 🎯`;
 	}
 
 	// ── Specific debt questions ─────────────────────
@@ -254,7 +254,7 @@ function generateOfflineResponse(message: string, debts: Debt[], settings: AppSe
 		msg.includes("paano") ||
 		msg.includes("tutorial")
 	) {
-		return `Here's how to use Payoff:\n\n📊 **Dashboard** — See your total debt overview\n💳 **My Debts** — Add, manage & log payments\n📈 **Plan** — See your personalized payoff order\n🤖 **AI Coach** — That's me! Ask anything\n🏆 **Progress** — Track milestones\n⚙️ **Settings** — Change name, currency & more\n\nWhat would you like to know more about?`;
+		return `Here's how to use Climb:\n\n📊 **Dashboard** — See your total debt overview\n💳 **My Debts** — Add, manage & log payments\n📈 **Plan** — See your personalized climb order\n🤖 **AI Coach** — That's me! Ask anything\n🏆 **Progress** — Track milestones\n⚙️ **Settings** — Change name, currency & more\n\nWhat would you like to know more about?`;
 	}
 
 	// ── Tagalog support ─────────────────────────────
